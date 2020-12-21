@@ -1,8 +1,8 @@
 development:
-  password: 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
-  theme_id: "84013744233"
+  password:
+  theme_id: ""
   timeout: 600s
-  store: tranthainhan.myshopify.com
+  store:
   ignore_files:
     - settings_data.json
     - "*.css"
