@@ -1,0 +1,827 @@
+{%- liquid
+  assign iconbox_blocks = section.blocks | where: 'type' , 'icon_item'
+  assign logo_blocks = section.blocks | where: 'type', 'logo_item'
+  assign testimonial_blocks = section.blocks | where: 'type', 'testimonial_item'
+  assign product_blocks = section.blocks | where: 'type', 'product_item'
+  assign arr_block_item = 'icon_item,logo_item,testimonial_item,product_item'
+  assign color_default = 'rgba(0,0,0,0)'
+-%}
+
+{%- capture sectionID -%}.{{section.id}}{%- endcapture -%}
+
+<div class="sb-left-column {{section.id}}" data-section-type="left-column" data-section-id="{{block.id}}">
+  <div class="section-wrapper">
+    {%- for block in section.blocks -%}
+      {%- if arr_block_item contains block.type -%}{%- continue -%}{%- endif -%}
+
+        {%- liquid
+          assign blockID     = 'block-' | append: block.id
+          assign classID     = ' .sb-widget.' | append: blockID | prepend: sectionID
+          assign bg_color    = block.settings.bg_color | default: color_default
+          assign block_title = block.settings.title
+        -%}
+      <div class="sb-widget widget-{{block.type}} {{blockID}}" {%- if bg_color != color_default -%} style="background-color: {{bg_color}};" {%- endif -%}>
+
+        {%- case block.type -%}
+          {%- when 'menu' -%}
+            <div class="sb-widget_title">
+              <h5>{{block_title}}</h5>
+            </div>
+
+            <ul class="menu-list" {{block.shopify_attributes}}>
+              {%- for link in linklists[block.settings.menu].links -%}
+                <li class="menu-item">
+                  <a href="{{link.url}}">{%- render 'snippet-nav-label' link: link -%}</a>
+
+                  {%- if link.links != blank -%}
+                    <a href="#" onclick="return false" class="js-btn-collapse collapse" data-target="child-link-{{block.id | append: forloop.index}}">
+                      {%- render 'svg' type: 'angle-down' -%}
+                    </a>
+                    <div class="dropdown-menu child-menu">
+                      <ul class="menu-list" id="child-link-{{block.id | append: forloop.index}}">
+                        {%- for child_link in link.links -%}
+                          <li class="menu-item">
+                            <a href="{{child_link.url}}">{%- render 'snippet-nav-label' link: child_link -%}</a>
+
+                            {%- if child_link.links != blank -%}
+                              <a href="#" onclick="return false" class="js-btn-collapse collapse" data-target="grandchild-link-{{block.id | append: forloop.index}}">
+                                {%- render 'svg' type: 'angle-down' -%}
+                              </a>
+                              <div class="dropdown-menu grandchild-menu">
+                                <ul class="menu-list" id="grandchild-link-{{block.id | append: forloop.index}}">
+                                  {%- for grandchild_link in child_link.links -%}
+                                    <li class="menu-item">
+                                      <a href="{{grandchild_link.url}}">{%- render 'snippet-nav-label' link: grandchild_link -%}</a>
+                                    </li>
+                                  {%- endfor -%}
+                                </ul>
+                              </div>
+                            {%- endif -%}
+                          </li>
+                        {%- endfor -%}
+                      </ul>
+                    </div>
+                  {%- endif -%}
+                </li>
+              {%- endfor -%}
+            </ul>
+          {% comment %} end {% endcomment %}
+
+          {%- when 'iconbox' -%}
+            {%- if iconbox_blocks.size > 0 -%}
+              <div class="icon-list">
+                {%- for icon_item in iconbox_blocks -%}
+                  <div class="card_section-item" {{icon_item.shopify_attributes}}>
+                    <div class="card_section-item-inner">
+                      <div class="card_section-header">
+                        <div class="card_section-figure">
+                          {%- case icon_item.settings.icon_type -%}
+                            {%- when 'image' -%}
+                              {%- render 'image-style' image: icon_item.settings.icon_image -%}
+                            {%- when 'svg' -%}
+                              <span class="svg_element-ui">{{icon_item.settings.icon_svg}}</span>
+                          {%- endcase -%}
+                        </div>
+                      </div>
+                      <div class="card_section-body">
+                        <div class="card_section-info">
+                          <p class="card_section-title">{{icon_item.settings.title}}</p>
+                          <p class="card_section-subtitle">{{icon_item.settings.subtitle}}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                {%- endfor -%}
+              </div>
+            {%- endif -%}
+          {% comment %} end {% endcomment %}
+
+          {%- when 'logo-list' -%}
+            {%- if logo_blocks.size > 0 -%}
+              <div class="sb-widget_title">
+                <h5>{{block_title}}</h5>
+              </div>
+
+              <ul class="logo-list">
+                {%- for logo_item in logo_blocks -%}
+                  <li class="logo-item" {{logo_item.shopify_attributes}}>
+                    <a href="{{logo_item.settings.image_link}}">
+                      {%- render 'image-style' image: logo_item.settings.image -%}
+                    </a>
+                  </li>
+                {%- endfor -%}
+              </ul>
+            {%- endif -%}
+          {% comment %} end {% endcomment %}
+
+          {%- when 'banner' -%}
+            <div class="banner">
+              <div class="banner-wrapper">
+                {%- if block.settings.image != blank -%}
+                  <div class="image overlay-ui">
+                    {%- render 'image-style' image: block.settings.image, padding: '100%' -%}
+                  </div>
+                {%- endif -%}
+                <div class="textbox">
+                  {%- for i in (1..4) -%}
+                    {%- assign text = 'text_' | append: i -%}
+                    <div class="text-{{i}}">{{block.settings[text]}}</div>
+                  {%- endfor -%}
+                  <a href="{{block.settings.btn_url}}" class="btn btn-{{block.settings.btn_style}}">{{block.settings.btn_text}}</a>
+                </div>
+              </div>
+            </div>
+
+            {%- capture block_css -%}
+              {%- for i in (1..4) -%}
+                {%- liquid
+                  assign text_color  = 'text_color_' | append: i
+                  assign font_weight = 'fw_' | append: i
+                  assign font_size   = 'fs_' | append: i
+                  assign margin      = 'mr_' | append: i
+                  assign text_color  = block.settings[text_color] | default: color_default
+                  assign nextClassID = ' .textbox .text-' | append: i
+                -%}
+                {%- capture css_values -%}
+                  {%- if text_color != color_default -%} color: {{text_color}}; {%- endif -%}
+                  {%- render 'css-resp' type: 'value', css_value: block.settings[font_size], showFirst: true, css_property: 'font-size' -%}
+                  {%- render 'css-resp' type: 'value', css_value: block.settings[margin], showFirst: true, css_property: 'margin' -%}
+                  font-weight: {{block.settings[font_weight]}};
+
+                {%- endcapture -%}
+                {%- render 'css-resp' classID: classID, nextClassID: nextClassID, css_values: css_values  -%}
+                {%- render 'css-resp' classID: classID, nextClassID: nextClassID, showLast: true, css_value: block.settings[font_size], css_property: 'font-size' -%}
+                {%- render 'css-resp' classID: classID, nextClassID: nextClassID, showLast: true, css_value: block.settings[margin], css_property: 'margin' -%}
+              {%- endfor -%}
+            {%- endcapture -%}
+            {%- assign section_css = section_css | append: block_css -%}
+          {% comment %} end {% endcomment %}
+
+          {%- when 'testimonial-list' -%}
+            {%- if testimonial_blocks.size > 0 -%}
+              <div class="sb-widget_title">
+                <h5>{{block_title}}</h5>
+              </div>
+              <div class="testimonial-list">
+                <div class="testimonial-list_wrapper">
+                  <div class="row js-tns testimonial-content" data-config="sb-left-tns-congfig-{{block.id}}">
+                    {%- for testimonial_item in testimonial_blocks -%}
+                      {%- assign star = 'star-' | append: testimonial_item.settings.rating -%}
+                      <div class="col-12 testimonial-item">
+                        <div class="card_section-item-inner">
+                          <div class="card_testimonial-image">
+                            <div class="image">{%- render 'image-style' image: testimonial_item.settings.image -%}</div>
+
+                            <div class="content">
+                              <p class="card_testimonial-author">{{testimonial_item.settings.title}}</p>
+                              <div class="card_testimonial-rating rating">
+                                {%- render 'svg' type: star -%}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="card_testimonial-content">
+                            <div class="card_testimonial-review">{{testimonial_item.settings.review}}</div>
+                          </div>
+                        </div>
+                      </div>
+                    {%- endfor -%}
+                  </div>
+                  <div class="js-tns-controls">
+                    <a href="#" onclick="return false" class="js-prev-button">
+                      {%- render 'svg' type: 'angle-left' -%}
+                    </a>
+                    <a href="#" onclick="return false" class="js-next-button">
+                      {%- render 'svg' type: 'angle-right' -%}
+                    </a>
+                  </div>
+                  <script type="application/json" id="sb-left-tns-congfig-{{block.id}}">
+                    {
+                      "mouseDrag": true,
+                      "controls": true,
+                      "loop": false,
+                      "navPosition": "bottom",
+                      "itemClass": "testimonial-item"
+                    }
+                  </script>
+                </div>
+              </div>
+            {%- endif -%}
+          {% comment %} end {% endcomment %}
+
+          {%- when 'product-list' -%}
+            <div class="sb-widget_title">
+              <h5>{{block_title}}</h5>
+            </div>
+            <div class="product-list">
+              <div class="product-list_wrapper">
+                <div class="row js-tns product-list_content" data-config="sb_left_tns_config_{{block.id}}">
+                  {%- for product_item in product_blocks -%}
+                    {%- liquid
+                      assign product_handle = product_item.settings.product_handle
+                      assign product_selected =  all_products[product_handle]
+                    -%}
+                    <div class="col-12 product-item">
+                      {%- render 'product-item' product: product_selected -%}
+                    </div>
+                  {%- endfor -%}
+                </div>
+                <div class="js-tns-controls">
+                  <a href="#" onclick="return false" class="js-prev-button">
+                    {%- render 'svg' type: 'angle-left' -%}
+                  </a>
+                  <a href="#" onclick="return false" class="js-next-button">
+                    {%- render 'svg' type: 'angle-right' -%}
+                  </a>
+                </div>
+                <script type="application/json"id="sb_left_tns_config_{{block.id}}">
+                  {
+                    "itemClass" : "product-item",
+                    "mouseDrag" : true,
+                    "swipeAngle" : false,
+                    "loop" : false,
+                    "nav" : true,
+                    "controls" : true,
+                    "navPosition" : "bottom",
+                    "gutter" : "30",
+                    "edgePadding" : "6"
+                  }
+                </script>
+              </div>
+            </div>
+        {%- endcase -%}
+      </div>
+    {%- endfor -%}
+  </div>
+</div>
+
+<style>{{section_css}}</style>
+
+{%- schema -%}
+{
+  "name": {
+    "en": "Left Column"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": {
+        "en": "Background color"
+      }
+    }
+  ],
+  "blocks": [
+    {
+      "type": "menu",
+      "name": {
+        "en": "Menu"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Title"
+          }
+        },
+        {
+          "type": "color",
+          "id": "bg_color",
+          "label": {
+            "en": "Background color"
+          }
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": {
+            "en": "Menu"
+          }
+        }
+      ]
+    },
+    {
+      "type": "iconbox",
+      "limit": 1,
+      "name": {
+        "en": "Icon Box"
+      },
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": {
+            "en": "To add item. Please add block '[+] Icon item'"
+          }
+        },
+        {
+          "type": "color",
+          "id": "bg_color",
+          "label": {
+            "en": "Background color"
+          }
+        }
+      ]
+    },
+    {
+      "type": "icon_item",
+      "name": {
+        "en": "[+] Icon item"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Title"
+          }
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": {
+            "en": "Subtitle"
+          }
+        },
+        {
+          "type": "select",
+          "id": "icon_type",
+          "label": {
+            "en": "Icon type"
+          },
+          "options": [
+            {
+              "value": "image",
+              "label": {
+                "en": "image"
+              }
+            },
+            {
+              "value": "svg",
+              "label": {
+                "en": "SVG"
+              }
+            }
+          ]
+        },
+        {
+          "type": "image_picker",
+          "id": "icon_image",
+          "label": {
+            "en": "Image"
+          }
+        },
+        {
+          "type": "html",
+          "id": "icon_svg",
+          "label": {
+            "en": "SVG"
+          }
+        }
+      ]
+    },
+    {
+      "type": "logo-list",
+      "limit": 1,
+      "name": {
+        "en": "Logo list"
+      },
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": {
+            "en": "To add item. Please add content 'Logo item' "
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Title"
+          }
+        },
+        {
+          "type": "color",
+          "id": "bg_color",
+          "label": {
+            "en": "Background color"
+          }
+        }
+      ]
+    },
+    {
+      "type": "logo_item",
+      "name": {
+        "en": "[+] Logo Item"
+      },
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": {
+            "en": "Image"
+          }
+        },
+        {
+          "type": "url",
+          "id": "image_link",
+          "label": {
+            "en": "Image Link"
+          }
+        }
+      ]
+    },
+    {
+      "type": "banner",
+      "name": {
+        "en": "Banner"
+      },
+      "settings": [
+        {
+          "type": "color",
+          "id": "bg_color",
+          "label": {
+            "en": "Background color"
+          }
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": {
+            "en": "image"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Text one settings"
+          }
+        },
+        {
+          "type": "text",
+          "id": "text_1",
+          "label": {
+            "en": "Text 1"
+          },
+          "default": "Lorem, ipsum dolor."
+        },
+        {
+          "type": "color",
+          "id": "text_color_1",
+          "label": {
+            "en": "Color"
+          }
+        },
+        {
+          "type": "text",
+          "id": "fs_1",
+          "label": {
+            "en": "Font size"
+          },
+          "info": {
+            "en": "E.g: 20px"
+          }
+        },
+        {
+          "type": "range",
+          "id": "fw_1",
+          "label": "Font weight",
+          "step": 100,
+          "min": 100,
+          "max": 900,
+          "default": 400
+        },
+        {
+          "type": "text",
+          "id": "mr_1",
+          "label": {
+            "en": "Margin"
+          },
+          "info": {
+            "en": "E.g: 20px"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Text two settings"
+          }
+        },
+        {
+          "type": "text",
+          "id": "text_2",
+          "label": {
+            "en": "Text 2"
+          },
+          "default": "Lorem ipsum dolor sit."
+        },
+        {
+          "type": "color",
+          "id": "text_color_2",
+          "label": {
+            "en": "Color"
+          }
+        },
+        {
+          "type": "text",
+          "id": "fs_2",
+          "label": {
+            "en": "Font size"
+          },
+          "info": {
+            "en": "E.g: 20px"
+          }
+        },
+        {
+          "type": "range",
+          "id": "fw_2",
+          "label": "Font weight",
+          "step": 100,
+          "min": 100,
+          "max": 900,
+          "default": 400
+        },
+        {
+          "type": "text",
+          "id": "mr_2",
+          "label": {
+            "en": "Margin"
+          },
+          "info": {
+            "en": "E.g: 20px"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Text three settings"
+          }
+        },
+        {
+          "type": "text",
+          "id": "text_3",
+          "label": {
+            "en": "Text 3"
+          },
+          "default": "Lorem ipsum dolor sit amet."
+        },
+        {
+          "type": "color",
+          "id": "text_color_3",
+          "label": {
+            "en": "Color"
+          }
+        },
+        {
+          "type": "text",
+          "id": "fs_3",
+          "label": {
+            "en": "Font size"
+          },
+          "info": {
+            "en": "E.g: 20px"
+          }
+        },
+        {
+          "type": "range",
+          "id": "fw_3",
+          "label": "Font weight",
+          "step": 100,
+          "min": 100,
+          "max": 900,
+          "default": 400
+        },
+        {
+          "type": "text",
+          "id": "mr_3",
+          "label": {
+            "en": "Margin"
+          },
+          "info": {
+            "en": "E.g: 20px"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Text four settings"
+          }
+        },
+        {
+          "type": "text",
+          "id": "text_4",
+          "label": {
+            "en": "Text 4"
+          },
+          "default": "Lorem, ipsum dolor."
+        },
+        {
+          "type": "color",
+          "id": "text_color_4",
+          "label": {
+            "en": "Color"
+          }
+        },
+        {
+          "type": "text",
+          "id": "fs_4",
+          "label": {
+            "en": "Font size"
+          },
+          "info": {
+            "en": "E.g: 20px"
+          }
+        },
+        {
+          "type": "range",
+          "id": "fw_4",
+          "label": "Font weight",
+          "step": 100,
+          "min": 100,
+          "max": 900,
+          "default": 400
+        },
+        {
+          "type": "text",
+          "id": "mr_4",
+          "label": {
+            "en": "Margin"
+          },
+          "info": {
+            "en": "E.g: 20px"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Button settings"
+          }
+        },
+        {
+          "type": "select",
+          "id": "btn_style",
+          "label": {
+            "en": "Button style"
+          },
+          "options": [
+            {
+              "value": "1",
+              "label": {
+                "en": "1"
+              }
+            },
+            {
+              "value": "2",
+              "label": {
+                "en": "2"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "en": "3"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "btn_text",
+          "label": {
+            "en": "Button label"
+          },
+          "default": "Shop Now"
+        },
+        {
+          "type": "text",
+          "id": "btn_url",
+          "label": {
+            "en": "Button link"
+          }
+        }
+      ]
+    },
+    {
+      "type": "testimonial-list",
+      "limit" : 1,
+      "name": {
+        "en": "Testimonial"
+      },
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": {
+            "en": "To add item. Please add content '[+] Testimonial item'"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Title"
+          }
+        },
+        {
+          "type": "color",
+          "id": "bg_color",
+          "label": {
+            "en": "Background color"
+          }
+        }
+      ]
+    },
+    {
+      "type" : "testimonial_item",
+      "name" : {
+        "en": "[+] Testimonial item"
+      },
+      "settings" : [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": {
+            "en": "Image"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Content"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Author's name"
+          },
+          "default" : "Author"
+        },
+        {
+          "type": "richtext",
+          "id": "review",
+          "label": {
+            "en": "Review"
+          },
+          "default" : "<p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nostrum excepturi ipsa possimus nesciunt asperiores architecto ullam voluptatibus, sed provident repudiandae.</p>"
+        },
+        {
+          "type" : "range",
+          "id": "rating",
+          "label":{
+            "en" : "Rating"
+          },
+          "step": 1,
+          "min" : 1,
+          "max" : 5,
+          "default" : 5
+        }
+      ]
+    },
+    {
+      "type" : "product-list",
+      "limit" : 1,
+      "name" : {
+        "en": "Product list"
+      },
+      "settings" : [
+        {
+          "type": "paragraph",
+          "content": {
+            "en": "To add product item. Please add content 'Product item.'"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Title"
+          }
+        },
+        {
+          "type": "color",
+          "id": "bg_color",
+          "label": {
+            "en": "Background color"
+          }
+        }
+      ]
+    },
+    {
+      "type" : "product_item",
+      "name" : {
+        "en": "[+] Product item"
+      },
+      "settings" : [
+        {
+          "type" : "product",
+          "id" : "product_handle",
+          "label" : "Product"
+        }
+      ]
+    }
+  ]
+}
+{%- endschema -%}
+

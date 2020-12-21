@@ -1,0 +1,99 @@
+{%- if section.settings.boxed_layout -%}{%- assign _layout = 'boxed' -%}{%- else -%}{%- assign _layout = 'full' -%}{%- endif -%}
+{%- liquid
+  assign sectionType          = 'footer'
+  assign _lazyload            = settings.use_lazyload
+  assign _paymentBlock        = section.blocks | where: 'type', 'payment'
+  assign __background_color   = section.settings.background_color | default: 'rgba(0,0,0,0)'
+  assign __text_color         = section.settings.text_color | default: 'rgba(0,0,0,0)'
+-%}
+
+{%- capture section_class -%}
+  section-{{- section.id -}}
+  |layout-{{- _layout -}}
+{%- endcapture -%}{%- assign section_class = section_class | strip | split: '|' | join: ' ' -%}
+{%- assign sectionID = '.section-' | append: section.id -%}
+
+{%- capture content -%}
+<div class="{{section_class}}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}" style="background-color: var(--footer-bg);color: var(--footer-copyright-cl);">
+	{%- if _layout == 'boxed' -%}<div class="container">{%- endif -%}
+		<div class="section_content-wrapper">
+      <div class="copyright-content">
+        {{ section.settings.copyright }}
+      </div>
+		</div>
+	{%- if _layout == 'boxed' -%}</div>{%- endif -%}
+</div>
+
+{%- capture sectionCss -%}
+  :root{
+    {%- unless __background_color == 'rgba(0,0,0,0)' -%}--footer-bg: {{ __background_color }};{%- endunless -%}
+    {%- unless __text_color       == 'rgba(0,0,0,0)' -%}--footer-copyright-cl: {{ __text_color }};{%- endunless -%}
+  }
+  {%- render 'css-resp' , css_value: __text_color, classID: sectionID, nextClassID: ' *', css_property: 'color' -%}
+  {%- render 'snippet-theme', type: 'sectionCSS', ID: sectionID -%}
+  {{- section_css -}}
+{%- endcapture -%}
+{%- assign sectionCss = sectionCss | strip_newlines -%}
+{%- unless sectionCss == blank -%}<style>{{sectionCss}}</style>{%- endunless -%}
+{%- endcapture -%}
+{%- render 'compress', content: content -%}
+
+{% schema %}
+{
+  "name": {
+    "en": "Footer"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": {
+        "en": "Boxed layout"
+      },
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "section_padding",
+      "label": {
+        "en": "Section Padding"
+      },
+      "placeholder": {
+        "en": "E.g: 5px 20px 5px 20px"
+      },
+      "info": {
+        "en": "Order: Top Right Bottom Left"
+      }
+    },
+    {
+      "type": "richtext",
+      "id": "copyright",
+      "label": {
+        "en": "Copyright"
+      },
+      "default": "<p>Copyright © 2020 Mymedi. All Rights Reserved</p>"
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Color style"
+      }
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": {
+        "en": "Background color"
+      }
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": {
+        "en": "Text color"
+      }
+    }
+  ]
+}
+{% endschema %}

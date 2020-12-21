@@ -1,0 +1,133 @@
+{%- capture content -%}
+{%- if section.settings.boxed_layout -%}{%- assign _layout = 'boxed' -%}{%- else -%}{%- assign _layout = 'full' -%}{%- endif -%}
+{%- liquid
+  assign total_item     = section.settings.total | default: '20' | abs
+  assign _items_resp    = section.settings.items_resp | default: '3,2,2'
+  assign _catalog_mode  = section.settings.catalog_mode | strip_newlines | split: ','
+-%}
+{%- liquid
+  if settings.collection_page == 'infinite' or collection.template_suffix contains 'infinite'
+    assign infiniteMode = true
+  endif
+-%}
+
+{%- capture section_class -%}
+  {{- -}}section-{{- section.id -}}
+  {{- -}}|layout-{{- _layout -}}
+  {{- -}}|product_style-grid
+{%- endcapture -%}{%- assign section_class = section_class | strip | split: '|' | join: ' ' -%}
+{%- assign sectionID = '.section-' | append: section.id -%}
+
+{%- capture gridClass -%}{%- render 'set-item-per-row', value: _items_resp -%}{%- endcapture -%}
+{%- paginate collection.products by total_item -%}
+
+  <div class="{{section_class}}" data-section-type="collection-page" data-section-id="{{section.id}}">
+    <div class="section_content-wrapper">
+
+      <div class="section_content-head">
+        {%- if _layout == 'boxed' -%}<div class="container">{%- endif -%}
+
+          {%- render 'collection-toolbar', defaultView: total_item, paginate: paginate -%}
+
+        {%- if _layout == 'boxed' -%}</div>{%- endif -%}
+      </div>
+
+
+      <div class="section_content-body">
+        <div id="col-main">
+          {%- if _layout == 'boxed' -%}<div class="container">{%- endif -%}
+            <div class="row">
+              {%- if collection.products.size > 0 -%}
+                {%- for product in collection.products -%}
+                  {%- assign productClass = 'product-section' -%}
+                  <section class="{{ productClass }} {{gridClass}}">
+                    <div
+                      class="lazyload"
+                      data-lazyqueue
+                      data-id="{{product.id}}"
+                      data-type="product-card"
+                      data-expand="300"
+                      data-include="{{routes.root_url}}collections/{{collection.handle}}/products/{{product.handle}}?view=product-card">
+                      {%- render 'svg' type: 'is-loading' -%}
+                    </div>
+
+                    {% comment %} {%- render 'product-item', product: product -%} {% endcomment %}
+                  </section>
+                {%- endfor -%}
+
+              {%- else -%}
+                <p class="no-products">{{- 'collections.general.no_product' | t -}}</p>
+              {%- endif -%}
+            </div>
+
+            {%- if infiniteMode -%}
+              <span class="js-infinite-btn"></span>
+            {%- else -%}
+              {%- include 'pagination' -%}
+            {%- endif -%}
+          {%- if _layout == 'boxed' -%}</div>{%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endpaginate -%}
+
+
+{%- capture sectionCss -%}
+  {{- section_css -}}
+{%- endcapture -%}
+{%- assign sectionCss = sectionCss | strip_newlines -%}
+{%- unless sectionCss == blank -%}<style>{{sectionCss}}</style>{%- endunless -%}
+{%- endcapture -%}
+{%- render 'compress', content: content -%}
+<script>
+window.theme = Object.assign(window.theme || {}, {
+  collection: {
+    suffix: {{template.suffix | default: settings.collection_page | json}},
+    gridClass: {{gridClass | json}}
+  }
+});
+</script>
+
+
+{% schema %}
+{
+  "name": {
+    "en": "Collection page"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": {
+        "en": "Boxed layout"
+      },
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "items_resp",
+      "label": {
+        "en": "Max number of items per row"
+      },
+      "default": "4,3,2",
+      "info": {
+        "en": "E.g: 4,3,2"
+      }
+    },
+    {
+      "type": "text",
+      "id": "total",
+      "label": {
+        "en": "Total items"
+      },
+      "default": "20",
+      "info": {
+        "en": "Maximum is 50"
+      }
+    }
+  ],
+  "blocks": []
+}
+{% endschema %}

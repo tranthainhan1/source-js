@@ -1,0 +1,107 @@
+{%- if section.settings.boxed_layout -%}{%- assign _layout = 'boxed' -%}{%- else -%}{%- assign _layout = 'full' -%}{%- endif -%}
+{%- liquid
+  assign _bg_color = section.settings.bg_color | default: 'rgba(0,0,0,0)'
+-%}
+{%- capture content -%}
+<div class="section-separator section-separator-{{ section.id }} section-{{section.id}} layout-{{_layout }}">
+  {%- if _layout == 'boxed' -%}<div class="container">{%- endif -%}
+    <div class="section_content-wrapper">
+      
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+          {%- when 'spacing' -%}
+            {%- capture separatorID -%}.section-{{section.id}} .spacing-{{block.id}}{%- endcapture -%}
+            <div class="separator spacing-{{block.id}}"{{block.shopify_attributes}}>
+              {%- capture block_css -%}{%- render 'css-resp', classID: separatorID, css_value: block.settings.height, css_property: 'height' -%}{%- endcapture -%}
+              {%- assign section_css = section_css | append: block_css -%}
+            </div>
+
+          {%- else -%}
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+
+  {%- if _layout == 'boxed' -%}</div>{%- endif -%}
+</div>
+<style>.section-{{section.id}} .section_content-wrapper{background-color:{{_bg_color}};}{{section_css}}</style>
+{%- endcapture -%}
+{%- render 'compress', content: content -%}
+
+{% schema %}
+{
+  "name": {
+    "en": "Separator"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": {
+        "en": "Seperator Section use to create spacing between sections"
+      }
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": {
+        "en": "Section Label"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Layout"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": {
+        "en": "Boxed layout"
+      }
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": {
+        "en": "Background color"
+      },
+      "default": "rgba(0,0,0,0)"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "spacing",
+      "name": {
+        "en": "Spacing"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "height",
+          "label": {
+            "en": "Height"
+          },
+          "placeholder": {
+            "en": "E.g: 30px, 15px, 10px"
+          },
+          "default": "30px, 15px"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": {
+        "en": "Separator"
+      },
+      "category": "Separator",
+      "blocks": [
+        {
+          "type": "spacing"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

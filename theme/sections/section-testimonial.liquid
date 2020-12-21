@@ -1,0 +1,609 @@
+{%- if section.settings.boxed_layout -%}{%- assign _layout = 'boxed' -%}{%- else -%}{%- assign _layout = 'full' -%}{%- endif -%}
+{%- liquid
+  assign _lazyload              = true
+  assign _items_resp            = section.settings.items_resp | default: '3,1'
+  assign _enable_slider         = section.settings.enable_slider
+  assign _card_section_bg_color = section.settings.card_section_bg_color | default: 'rgba(0,0,0,0)'
+  assign _card_section_color    = section.settings.card_section_color | default: 'rgba(0,0,0,0)'
+  assign _card_section_color_2    = section.settings.card_section_color_2 | default: 'rgba(0,0,0,0)'
+  assign _slide_centerMobile    = section.settings.slide_center_on_mobile
+  assign _spcBanner             = section.settings.banner
+-%}
+
+{%- capture section_class -%}
+	{{- -}}home-testimonials
+	{{- -}}|section-{{- section.id -}}
+	{{- -}}|layout-{{- _layout -}}
+{%- endcapture -%}{%- assign section_class = section_class | strip | split: '|' | join: ' ' -%}
+{%- assign sectionID = '.section-' | append: section.id -%}
+
+{%- if _enable_slider -%}{%- capture gridClass -%}{%- render 'set-item-per-row', value: _items_resp -%}{%- endcapture -%}{%- endif -%}
+
+{%- capture content -%}
+  <div class="{{section_class}}" data-section-type="testimonials" data-section-id="{{section.id}}">
+    {%- if _layout == 'boxed' -%}<div class="container">{%- endif -%}
+      {%- capture bgset -%}{%- render 'bgset' ,class: 'bg-image' ,image: section.settings.section_bg_image -%}{%- endcapture-%}
+      <div class="section_content-wrapper{% unless _spcBanner == blank %} d-grid align-items-center{% endunless %} {{bgset}}">
+
+        {%- unless _spcBanner == blank -%}
+          <div class="spc_block-wrapper">
+            <div class="spc_block-item">
+              {%- render 'image-style', image: _spcBanner -%}
+            </div>
+          </div>
+          <div class="featured_product-group">
+        {%- endunless -%}
+
+        {%- unless section.settings.sectionHeading_text_1 == blank and section.settings.sectionHeading_text_2 == blank -%}
+          {%- capture customHeadingSVG -%}{{section.settings.sectionHeading_text_1_svg}}{%- endcapture -%}
+          <div class="section_content-head">
+            {%- include 'snippet-theme', type: 'sectionHeading', section_css: section_css, headingIcon: customHeadingSVG -%}
+          </div>
+        {%- endunless -%}
+
+        <div class="section_content-body style-{{section.settings.style}}">
+          <div class="card_section-wrapper d-grid{% if _enable_slider %} row js-tns slide_ui-element"  data-config="tns-config-{{section.id}}{% endif %}">
+            {%- if section.blocks.size > 0 -%}
+              {%- for block in section.blocks -%}
+                {%- liquid
+                  assign _star = 'star-' | append: block.settings.rating
+                -%}
+
+                <div class="card_section-item {{gridClass}}"{{block.shopify_attributes}}>
+                  <div class="card_section-item-inner">
+                    {%- case section.settings.style -%}
+                      {%- when '1' -%}
+                        <div class="card_testimonial-image">
+                          <div class="image">{%- render 'image-style' image: block.settings.image -%}</div>
+                        </div>
+                        <div class="card_testimonial-content">
+                          <div class="card_testimonial-rating rating">{%- render 'svg' type: _star -%}</div>
+                          <div class="card_testimonial-review">{{ block.settings.review }}</div>
+                          <p class="card_testimonial-author">{{ block.settings.title }}</p>
+                        </div>
+                      {%- when '2' -%}
+                        <div class="card_testimonial-image">
+                          <div class="image">{%- render 'image-style' image: block.settings.image -%}</div>
+                          <div class="content">
+                            <p class="card_testimonial-author">{{ block.settings.title }}</p>
+                            <div class="card_testimonial-rating rating">{%- render 'svg' type: _star -%}</div>
+                          </div>
+                        </div>
+                        <div class="card_testimonial-content">
+                          <div class="card_testimonial-review">{{ block.settings.review }}</div>
+                        </div>
+                    {%- endcase -%}
+                  </div>
+                </div>
+
+              {%- endfor -%}
+            {%- else -%}
+              {%- for i in (1..3) -%}
+                <div class="card_section-item">
+                  <div class="card_section-item-inner">
+                    <div class="card_testimonial-review">
+                      <p>Add customer reviews and testimonials to showcase your store’s happy customers.</p>
+                    </div>
+                    <p class="card_testimonial-author">Author's name</p>
+                    <div class="card_testimonial-rating">{%- render 'svg' typle: 'star-5' -%}</div>
+                  </div>
+                </div>
+              {%- endfor -%}
+            {%- endif -%}
+          </div>
+
+          {%- if _enable_slider -%}
+            {%- render 'set-item-per-row', value: section.settings.items_resp,type: 'slider',section: section -%}
+          {%- endif -%}
+        </div>
+
+        {%- unless _spcBanner == blank -%}
+          </div>
+        {%- endunless -%}
+      </div>
+    {%- if _layout == 'boxed' -%}</div>{%- endif -%}
+  </div>
+  {%- assign ID = sectionID | append: ' .section_content-wrapper' -%}
+  {%- capture sectionCss -%}
+    {%- liquid
+      echo section_css
+      render 'snippet-theme', type: 'sectionCSS', ID: ID, no_padding: true
+      assign _items_resp = _items_resp | replace: ',', ';' | replace: ';', ', 1fr;' | append: ', 1fr'
+      render 'css-resp', classID: sectionID, nextClassID: ' .section_content-body .d-grid:not(.slide_ui-element)', css_value: _items_resp, css_property: 'grid-template-columns', css_value_before: 'repeat', css_split: ';'
+      render 'css-resp', classID: sectionID, nextClassID: ' .section_content-body .d-grid', css_value: section.settings.grid_spc, css_property: 'grid-gap'
+      render 'css-resp', classID: sectionID, css_value: section.settings.section_padding
+      unless _spcBanner == blank
+        render 'css-resp', classID: sectionID, nextClassID: ' .section_content-wrapper.d-grid', css_value: section.settings.grid_layout, css_property: 'grid-template-columns'
+        render 'css-resp', classID: sectionID, nextClassID: ' .section_content-wrapper.d-grid', css_value: section.settings.grid_gap, css_property: 'grid-gap'
+      endunless
+    -%}
+
+    {%- unless _card_section_bg_color == 'rgba(0,0,0,0)' -%}{{- sectionID }} .card_section-item-inner{background: {{ _card_section_bg_color }};}{%- endunless -%}
+    {%- unless _card_section_color == 'rgba(0,0,0,0)' -%}{{- sectionID }} .card_section-item .card_testimonial-author{color: {{_card_section_color}};}{%- endunless -%}
+    {%- unless _card_section_color_2 == 'rgba(0,0,0,0)' -%}{{- sectionID }} .card_section-item .card_testimonial-review{color: {{_card_section_color_2}};}{%- endunless -%}
+
+    {% comment %}{{sectionID}} .tns-inner{margin-left: calc(calc(100vw - 1265px) / 2)!important;}{% endcomment %}
+
+  {%- endcapture -%}{%- assign sectionCss = sectionCss | strip_newlines -%}
+  {%- unless sectionCss == blank -%}<style>{{sectionCss}}</style>{%- endunless -%}
+{%- endcapture -%}
+{%- render 'compress', content: content -%}
+<arena class="d-none">{{section.id}}:testimonials</arena>
+
+{% schema %}
+{
+  "name": {
+    "en": "Testimonials"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": {
+        "en": "Created by 'Testimonials' section"
+      }
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": {
+        "en": "Section Label [:id]"
+      },
+      "default": "Testimonials"
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "LAYOUT"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": {
+        "en": "Boxed layout"
+      },
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "section_padding",
+      "label": "Section Padding",
+      "placeholder": {
+        "en": "E.g: 5px 20px 5px 20px"
+      },
+      "info": {
+        "en": "Order: Top Right Bottom Left"
+      }
+    },
+    {
+      "type": "color",
+      "id": "section_bg_color",
+      "label": {
+        "en": "Background color"
+      }
+    },
+    {
+      "type": "image_picker",
+      "id": "section_bg_image",
+      "label": {
+        "en": "Background image"
+      }
+    },
+    {
+      "type": "select",
+      "id": "section_bg_size",
+      "label": {
+        "en": "Background Size"
+      },
+      "default": "cover",
+      "options": [
+        {
+          "value": "auto",
+          "label": {
+            "en": "Auto"
+          }
+        },
+        {
+          "value": "cover",
+          "label": {
+            "en": "Cover"
+          }
+        },
+        {
+          "value": "contain",
+          "label": {
+            "en": "Contain"
+          }
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "section_bg_repeat",
+      "label": {
+        "en": "Background Image Repeat:"
+      },
+      "default": "no-repeat",
+      "options": [
+        {
+          "value": "no-repeat",
+          "label": {
+            "en": "No Repeat"
+          }
+        },
+        {
+          "value": "repeat",
+          "label": {
+            "en": "Repeat"
+          }
+        },
+        {
+          "value": "repeat-x",
+          "label": {
+            "en": "Repeat X"
+          }
+        },
+        {
+          "value": "repeat-y",
+          "label": {
+            "en": "Repeat Y"
+          }
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "section_bg_position",
+      "label": {
+        "en": "Background Image Position:"
+      },
+      "default": "center center",
+      "options": [
+        {
+          "value": "left top",
+          "label": {
+            "en": "Left Top"
+          }
+        },
+        {
+          "value": "center top",
+          "label": {
+            "en": "Center Top"
+          }
+        },
+        {
+          "value": "right top",
+          "label": {
+            "en": "Right Top"
+          }
+        },
+        {
+          "value": "left center",
+          "label": {
+            "en": "Left Center"
+          }
+        },
+        {
+          "value": "center center",
+          "label": {
+            "en": "Center Center"
+          }
+        },
+        {
+          "value": "right center",
+          "label": {
+            "en": "Right Center"
+          }
+        },
+        {
+          "value": "left bottom",
+          "label": {
+            "en": "Left Bottom"
+          }
+        },
+        {
+          "value": "center bottom",
+          "label": {
+            "en": "Center Bottom"
+          }
+        },
+        {
+          "value": "right bottom",
+          "label": {
+            "en": "Right Bottom"
+          }
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Section Heading"
+      }
+    },
+    {
+      "type": "text",
+      "id": "sectionHeading_text_1",
+      "label": {
+        "en": "Heading"
+      },
+      "default": "Latest reviews"
+    },
+    {
+      "type": "text",
+      "id": "sectionHeading_text_1_svg",
+      "label": {
+        "en": "Custom SVG"
+      }
+    },
+    {
+      "type": "text",
+      "id": "sectionHeading_text_2",
+      "label": {
+        "en": "Subheading"
+      }
+    },
+    {
+      "type": "select",
+      "id": "sectionHeading_align",
+      "label": {
+        "en": "Alignment"
+      },
+      "options": [
+        {
+          "value": "auto",
+          "label": {
+            "en": "Auto"
+          }
+        },
+        {
+          "value": "left",
+          "label": {
+            "en": "Left"
+          }
+        },
+        {
+          "value": "center",
+          "label": {
+            "en": "Center"
+          }
+        },
+        {
+          "value": "right",
+          "label": {
+            "en": "Right"
+          }
+        }
+      ],
+      "default": "auto"
+    },
+    {
+      "type": "color",
+      "id": "sectionHeading_cl_1",
+      "label": {
+        "en": "Heading color"
+      },
+      "info": {
+        "en": "Blank to inherit"
+      }
+    },
+    {
+      "type": "color",
+      "id": "sectionHeading_cl_2",
+      "label": {
+        "en": "Subheading color"
+      },
+      "info": {
+        "en": "Blank to inherit"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Layout content"
+      }
+    },
+    {
+      "type": "text",
+      "id": "items_resp",
+      "label": {
+        "en": "Max number of items per row"
+      },
+      "default": "3,1",
+      "placeholder": {
+        "en": "E.g: 4,3,2"
+      }
+    },
+    {
+      "type": "text",
+      "id": "grid_spc",
+      "label": {
+        "en": "Item spacing"
+      },
+      "default": "8px",
+      "placeholder": {
+        "en": "E.g: 10px"
+      }
+    },
+    {
+      "type": "color",
+      "id": "card_section_bg_color",
+      "label": {
+        "en": "Item Background color"
+      },
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "card_section_color",
+      "label": {
+        "en": "Author name text color"
+      }
+    },
+    {
+      "type": "color",
+      "id": "card_section_color_2",
+      "label": {
+        "en": "Review text color"
+      }
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label" : {
+        "en" : "Style"
+      },
+      "options": [
+        {
+          "value": "1",
+          "label": {
+            "en": "1"
+          }
+        },
+        {
+          "value": "2",
+          "label": {
+            "en": "2"
+          }
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Slider settings"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": {
+        "en": "Enable Slider"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "controls",
+      "label": {
+        "en": "Show Nav"
+      },
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "dots",
+      "label": {
+        "en": "Show Dot"
+      },
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "slide_center_on_mobile",
+      "label": {
+        "en": "Enable Center mode on mobile"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Special Banner"
+      }
+    },
+    {
+      "type": "image_picker",
+      "id": "banner",
+      "label": {
+        "en": "Banner"
+      }
+    },
+    {
+      "type": "text",
+      "id": "grid_layout",
+      "label": {
+        "en": "Column Grid layout"
+      },
+      "default": "100%",
+      "placeholder": {
+        "en": "E.g: 70% 30% or 100%"
+      }
+    },
+    {
+      "type": "text",
+      "id": "grid_gap",
+      "label": {
+        "en": "Column Grid spacing"
+      },
+      "placeholder": {
+        "en": "E.g: 15px"
+      }
+    }
+  ],
+  "blocks": [
+    {
+      "type": "testimonial",
+      "name": {
+        "en": "Testimonial"
+      },
+      "settings": [
+        {
+          "type": "header",
+          "content": {
+            "en" : "Image"
+          }
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": {
+            "en" : "Image"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en" : "Content"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Author's name"
+          },
+          "default": "Author's name"
+        },
+        {
+          "type": "richtext",
+          "id": "review",
+          "label": {
+            "en": "Review"
+          },
+          "default": "<p>Add customer reviews and testimonials to showcase your store’s happy customers.</p>"
+        },
+        {
+          "type": "range",
+          "id": "rating",
+          "label": {
+            "en": "Rating"
+          },
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 4
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": {
+        "en": "Testimonials"
+      },
+      "category": "Advanced layout",
+      "blocks": []
+    }
+  ]
+}
+{% endschema %}

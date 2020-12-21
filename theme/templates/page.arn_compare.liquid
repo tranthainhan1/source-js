@@ -1,0 +1,22 @@
+<div class="page-arn-compare container">
+	<h1 class="page-title">{{ shop.metafields.arena.wl_cp_settings.compare_settings.compare_page_title }}</h1>
+	{% assign compare_enable = shop.metafields.arena.wl_cp_settings.compare_settings.compare_enable %}
+	{% if wishlist_enable == false %}
+		<p>{{ shop.metafields.arena.wl_cp_settings.compare_settings.compare_disable_msg }}</p>
+	{% else %}
+		<div class="compare-table">	
+			<!-- Table here -->
+		</div>
+		<svg width="64" height="64" class="arn_icon arn_icon-preloader"><use xlink:href="#arn_icon-preloader"></use></svg>
+		<p class="no-compare-msg">{{ shop.metafields.arena.wl_cp_settings.compare_settings.compare_empty_msg }}</p>
+	{% endif %}
+</div>
+
+<script type="text/javascript">
+	// Redirect to homepage if layout mode is modal
+	if (arn_wl_cp_settings.compare_settings.compare_layout[0] === 'popup') {
+		window.location.href = '/';
+	}
+	
+	document.getElementsByTagName("body")[0].classList.add("arn-compare-page");
+</script>

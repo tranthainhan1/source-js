@@ -1,0 +1,327 @@
+
+{%- capture section_class -%}
+  {{- -}}cart-section
+  {{- -}}|layout-{{- cart_layout-}}
+  {{- -}}|section-{{- section.id -}}
+{%- endcapture -%}{%- assign section_class = section_class | strip | split: '|' | join: ' ' -%}
+{%- assign sectionID = '.section-' | append: section.id -%}
+
+<div class="{{section_class}}" data-section-type="cart-page" data-section-id="{{section.id}}">
+  <div class="container">
+      <div class="section-wrapper">
+        <div class="cart-inner {% if cart.item_count == 0 -%} d-none {%- endif -item_count%}">
+          <div class="cart-title d-flex justify-content-between align-items-center">
+            <div class="cart-wrapper">
+              <h1>{{ 'cart.general.cart_title' | t}}</h1>
+              <span class="cart-count">(<span class="number" data-cart-count>{{cart.item_count}}</span>)</span>
+            </div>
+            <a href="/cart/clear" class="btn btn-1 btn-delete-all">{{ 'cart.general.remove_all' | t}}</a>
+          </div>
+
+          <form action="{{routes.cart_url}}" method="post" class="cart-form">
+            <div class="cart-content">
+              <div class="cart-content_table">
+                <div class="cart-content_headline">
+                  <span class="product">{{ 'cart.table.product' | t}}</span>
+                  <span class="price_title">{{ 'cart.table.price' | t}}</span>
+                  <span class="quantity">{{ 'cart.table.quantity' | t}}</span>
+                  <span class="subtotal">{{ 'cart.table.subtotal' | t}}</span>
+                </div>
+                <div class="cart-items">
+                  {%- for line_item in cart.items -%}
+                    <div class="line-item">
+                      <div class="line-item_wrapper">
+                        <div class="line-item_headline">
+                          <a href="{{line_item.url}}" class="image">
+                            {%- render 'image-style' image: line_item.image -%}
+                          </a>
+                          <div class="line-item_info">
+                            <a href="{{line_item.url}}" class="name"><strong>{{line_item.title}}</strong></a>
+                            <div class="options">
+                              {%- for option in line_item.options_with_values -%}
+                                <p class="option">{{option.name}}: {{option.value}}</p>
+                              {%- endfor -%}
+                            </div>
+                          </div>
+                        </div>
+                        <div class="line-item_price">
+                          {%- if line_item.variant.compare_at_price > line_item.variant.price -%}
+                            <del class="price-compare">{{line_item.variant.compare_at_price | money}}</del>
+                            <span class="price">{{line_item.variant.price | money}}</span>
+                          {%- else -%}
+                            <span class="price">{{line_item.variant.price | money}}</span>
+                          {%- endif -%}
+                        </div>
+                        <div class="line-item_quantity">
+                          <a href="#" onclick="return false" class="js-qty-minus btn-minus">{%- render 'svg' type: 'minus' -%}</a>
+                          <input type="number" name="updates[]" id="updates_{{line_item.variant_id}}" pattern="[0-9]+" min="1" value="{{line_item.quantity}}">
+                          <a href="#" onclick="return false" class="js-qty-plus btn-plus">{%- render 'svg' type: 'plus' -%}</a>
+                        </div>
+                        <div class="line-item_total price">{{line_item.original_line_price | money}}</div>
+                        <a href="/cart/change?line={{forloop.index}}&quantity=0"class="btn-remove" data-key="{{line_item.key}}">{%- render 'svg' type: 'close' -%}</a>
+                      </div>
+                    </div>
+                  {%- endfor -%}
+                </div>
+              </div>
+
+              <div class="cart-content_redirect text-right">
+                <a href="{{routes.all_products_collection_url}}">
+                  <span>{{ 'cart.general.continue_shopping' | t}} </span>
+                  <span class="svg_element-ui">{%- render 'svg' type: 'angle-right' -%}</span>
+                </a>
+                <a href="#" onclick="return false" class="btn btn-1 btn-update">{{ 'cart.general.update_cart' | t}}</a>
+              </div>
+
+              <div class="cart-content_bottom d-grid">
+                <div class="left-content">
+                  {%- if section.settings.enable_order_notes -%}
+                    <div class="cart-note">
+                      <div class="cart-note_title">{{ 'cart.general.cart_note' | t}}</div>
+                      <textarea name="note"></textarea>
+                    </div>
+                  {%- endif -%}
+                </div>
+                <div class="right-content">
+                  <div class="cart-total">
+                    <div class="title">{{ 'cart.general.cart_total' | t}}</div>
+                    <div class="price">{{cart.total_price | money}}</div>
+                  </div>
+                  <div class="free-shipping">
+                    <div class="sb-progress"><span class="sb-progress-bar" style="width: 100%">100%</span></div>
+                    <div class="text">{{ 'cart.general.free_shipping' | t}} <span class="price">{{10000 | money}}</span></div>
+                  </div>
+                  {%- if section.settings.enable_terms_condition -%}
+                    <div class="terms-and-conditions">
+                      <input type="checkbox" required id="terms_and_conditions" name="" value="">
+                      <label for="terms_and_conditions">{{ 'cart.general.terms_and_conditions' | t}}</label>
+                    </div>
+                  {%- endif -%}
+
+                  <div class="text-right">
+                    <button type="submit" name="checkout"  class="btn btn-1">{{ 'cart.general.proceed_to_checkout' | t}}</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </form>
+
+        </div>
+
+        <div class="cart-empty text-center {% if cart.item_count > 0 %} d-none {%- endif -%}">
+          <div class="cart-empty_icon">{%- render 'svg' type: 'cart-empty' -%}</div>
+          <h1 class="cart-title">{{ 'cart.general.empty' | t }}</h1>
+          <p>
+            <a class="btn btn-1" href="{{routes.all_products_collection_url}}" id="continueShopping">{{ 'cart.general.continue_shopping' | t }}</a>
+          </p>
+        </div>
+        {%- liquid
+          assign cart_enable_upsell  = section.settings.cart_enable_upsell
+          assign cart_upsell_heading = section.settings.cart_upsell_heading
+          assign cart_upsell_type    = section.settings.cart_upsell_type
+          assign grid_spc            = section.settings.grid_spc
+          assign items_resp          = section.settings.items_resp
+          assign collection_handle   = section.settings.upsell_products
+          assign collection          = collections[collection_handle]
+          assign isShow              = collection.products.size
+        -%}
+        {%- capture gridClass -%}{%- render 'set-item-per-row' value: items_resp  -%}{%- endcapture-%}
+
+        {%- if cart_enable_upsell and isShow != 0 -%}
+          <div class="upsell-products" style="position: relative;">
+            <div class="section_title-wrapper">
+              <div class="section_title-text-1">{{cart_upsell_heading}}</div>
+            </div>
+            {%- case cart_upsell_type -%}
+              {%- when 'slider' -%}
+                <div class="tns-wrapper">
+                  <div class="upsell-products_list js-tns row" data-config="cart_page_upsell_config">
+                    {%- for product in collection.products -%}
+                      <div class="product-item {{gridClass}}">
+                        {%- render 'product-item' product: product -%}
+                      </div>
+                    {%- endfor -%}
+                  </div>
+                  {%- render 'set-item-per-row' type: 'slider', section: section, configID: 'cart_page_upsell_config', item_class: 'product-item'  -%}
+                </div>
+              {%- when 'grid' -%}
+                <div class="upsell-products_list d-grid">
+                  {%- for product in collection.products -%}
+                    <div class="product-item">
+                      {%- render 'product-item' product: product -%}
+                    </div>
+                  {%- endfor -%}
+                </div>
+                <style>
+                  {%- assign _items_resp = items_resp | replace: ',', ';' | replace: ';', ', 1fr;' | append: ', 1fr' -%}
+                  {%- render 'css-resp' preClassID: '.upsell-products .d-grid', css_value: _items_resp,css_property: 'grid-template-columns', css_value_before: 'repeat', css_split: ';'  -%}
+                  {%- render 'css-resp' preClassID: '.upsell-products .d-grid', css_value: grid_spc,css_property: 'grid-gap'  -%}
+                </style>
+
+            {%- endcase -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Cart page",
+  "settings": [
+    {
+      "type": "header",
+      "content": {
+        "en": "Layout"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "layout",
+      "label": "Layout Boxed",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Cart order notes"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_order_notes",
+      "label": "Enable order notes"
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Terms and conditions"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_terms_condition",
+      "label": "Enable terms and conditions",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Shipping Calculator"
+      }
+    },
+    {
+      "type": "select",
+      "id": "shipping_calculator",
+      "label": "Show The Shipping Calculator",
+      "options": [
+        {
+          "value": "Disabled",
+          "label": "No"
+        },
+        {
+          "value": "Enabled",
+          "label": "Yes"
+        }
+      ],
+      "default": "Enabled"
+    },
+    {
+      "type": "text",
+      "id": "shipping_calculator_default_country",
+      "label": "Default Country Selection",
+      "default": "United States"
+    },
+    {
+      "type": "paragraph",
+      "content": {
+        "en": "If your customer is logged-in, the country in his default shipping address will be selected. If you are not sure about the spelling to use here, refer to the first checkout page."
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "UpSell Products"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "cart_enable_upsell",
+      "label": "Enable UpSell Products",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "cart_upsell_type",
+      "label": {
+        "en": "Type"
+      },
+      "options": [
+        {
+          "value": "slider",
+          "label": {
+            "en": "Slider"
+          }
+        },
+        {
+          "value": "grid",
+          "label": {
+            "en": "Grid"
+          }
+        }
+      ]
+    },
+    {
+      "type" : "checkbox",
+      "id" : "dots",
+      "label" : {
+        "en": "Show dots"
+      },
+      "default" : true
+    },
+    {
+      "type" : "checkbox",
+      "id" : "controls",
+      "label" : {
+        "en": "Show controls"
+      },
+      "default" : true
+    },
+    {
+      "type": "text",
+      "id": "items_resp",
+      "label": {
+        "en": "Max number of items per row."
+      },
+      "info": {
+        "en": "E.g: 4,3,2"
+      }
+    },
+    {
+      "type": "text",
+      "id": "grid_spc",
+      "label": {
+        "en": "Spacing between items."
+      },
+      "info": {
+        "en": "E.g: 20px"
+      }
+    },
+    {
+      "type": "text",
+      "id": "cart_upsell_heading",
+      "label": "Upsell Heading",
+      "default": "You might also like"
+    },
+    {
+      "type": "collection",
+      "id": "upsell_products",
+      "label": {
+        "en": "Collection"
+      }
+    }
+  ]
+}
+{% endschema %}

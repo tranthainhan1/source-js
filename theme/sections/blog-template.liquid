@@ -1,0 +1,89 @@
+{%- liquid
+  assign items_reps  = section.settings.items_resp
+  assign grid_spc    = section.settings.grid_spc
+  assign total_items = section.settings.total_items
+  assign sb_bg       = section.settings.sb_bg | default: 'rgba(0,0,0,0)'
+-%}
+
+{%- capture sectionID -%}.section-{{section.id}}{%- endcapture-%}
+
+{%- capture gridClass -%}{%- render 'set-item-per-row' value: items_reps -%}{%- endcapture-%}
+
+{%- if blog.articles_count > 0  -%}
+
+  <div class="blog-list">
+    {%- paginate blog.articles by total_items -%}
+      <div class="row">
+        {%- for article in blog.articles -%}
+          <div class="blog-item {{gridClass}}">
+            <article class="featured_blog__item">
+              <header>
+                <figure class="featured_blog__item-image">
+                  <a href="{{ article.url }}">
+                    {%- render 'image-style', image: article.image -%}
+                  </a>
+                </figure>
+              </header>
+
+
+              <footer>
+                <h3 class="featured_blog__item-title">
+                  <a href="{{ article.url }}">{{ article.title }}</a>
+                </h3>
+                <div class="featured_blog__item-author">
+                  {{- 'blogs.articles.author' | t: author: article.author -}}
+                  {%- assign published_at = article.published_at | date: "%B %d, %Y" -%}
+                  <span class="featured_blog__item-publish"> {{ 'blogs.articles.published_at' | t: date: published_at }}</span>
+                </div>
+
+                <div class="featured_blog__item-excerpt">{{ article.excerpt_or_content | truncatewords: 100}}</div>
+                <div class="featured_blog__item-button">
+                  <a href="{{article.url}}" class="btn btn-2">{{ 'general.article.read_more' | t}}</a>
+                </div>
+              </footer>
+            </article>
+          </div>
+        {%- endfor -%}
+      </div>
+      {%- include 'pagination' -%}
+    {%- endpaginate -%}
+  </div>
+
+  <a href="#" onclick="return false" class="js-drawer-open btn btn-1 btn-more d-lg-none" data-target="sidebarDrawer">{{ 'blogs.sidebar.show_more' | t}}</a>
+{%- else -%}
+  <p class="no-article">{{ 'blogs.articles.no_article' | t}}</p>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": {
+    "en": "Blog page"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "items_resp",
+      "label": {
+        "en": "Max number of items per row"
+      },
+      "default": "3,1",
+      "placeholder": {
+        "en": "E.g: 4,3,2"
+      }
+    },
+    {
+      "type": "text",
+      "id": "total_items",
+      "label": {
+        "en": "Total items"
+      },
+      "default": "20",
+      "info": {
+        "en": "Maximum is 50"
+      }
+    }
+  ],
+  "blocks" : []
+}
+{% endschema %}

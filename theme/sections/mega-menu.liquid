@@ -1,0 +1,726 @@
+{%- if section.settings.boxed_layout -%}{%- assign _layout = 'boxed' -%}{%- else -%}{%- assign _layout = 'full' -%}{%- endif -%}
+{%- liquid
+  assign sectionType    = 'featured-megamenu'
+  assign _lazyload      = settings.use_lazyload
+  assign _nav_link      = section.settings.nav_link
+  assign mainMenu       = linklists[_nav_link]
+  assign arrayMainMenu  = mainMenu.links | map: 'title'
+-%}
+
+{%- capture section_class -%}
+  {{- -}}section-{{- section.id -}}
+  {{- -}}|layout-{{- _layout -}}
+{%- endcapture -%}{%- assign section_class = section_class | strip | split: '|' | join: ' ' -%}
+{%- assign sectionID = '.section-' | append: section.id -%}
+
+{%- capture content -%}
+{{type}}
+<div id="megaMenu" class="{{section_class}}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+	<div class="mega-menu_desktop d-none d-lg-block">
+		{%- if _layout == 'boxed' -%}<div class="container">{%- endif -%}
+			{%- for block in section.blocks -%}
+				{%- if block.type == 'trigger' -%}
+					{%- liquid
+						assign blockTrigger  = block.settings.trigger
+						assign index 		   = forloop.index
+                  assign nextIndex     = index
+					-%}
+					{%- capture blockID -%}{{sectionID}} .block-{{block.id}}{%- endcapture -%}
+
+					<div class="mega-block block-{{block.id}}{% if forloop.first %} active{% endif %}"{{block.shopify_attributes}}>
+						<div class="hide" mega-block-target>{{ blockTrigger }}</div>
+
+						{%- if section.blocks[index].type != 'trigger' and section.blocks[index].type != 'mega_row' -%}
+
+							{%- capture block_css -%}
+								{%- capture firstValue -%}
+									{%- liquid
+										assign _items_resp = block.settings.items_resp | default: '4' | replace: ',', ';'
+										unless _items_resp contains '%'
+											assign _items_resp = _items_resp | replace: ';', ', 1fr;' | append: ', 1fr'
+											render 'css-resp', type: 'value', showFirst: true, css_value: _items_resp, css_property: 'grid-template-columns', css_value_before: 'repeat', css_split: ';'
+										else
+											render 'css-resp', type: 'value', showFirst: true, css_value: _items_resp, css_property: 'grid-template-columns', css_split: ';'
+										endunless
+										render 'css-resp', type: 'value', showFirst: true, css_value: block.settings.grid_spc, css_property: 'grid-gap'
+									-%}
+								{%- endcapture -%}
+								{%- render 'css-resp', classID: blockID, nextClassID: '.d-grid', showFirst: true, css_values: firstValue -%}
+							{%- endcapture -%}
+							{%- assign section_css = section_css | append: block_css -%}
+
+							<div class="d-grid block-{{block.id}}">
+								{%- for block in section.blocks offset: index -%}
+									{%- liquid
+										unless block.type contains 'block_'
+											break
+										endunless
+
+										assign nextIndex = index | plus: forloop.index
+
+										if block.settings.nested
+											continue
+										endif
+
+										include 'block-custom', type: 'megaBlock', block: block
+									-%}
+								{%- endfor -%}
+							</div>
+                  {%- endif -%}
+
+
+						{%- if section.blocks[nextIndex].type == 'mega_row' -%}
+                     {%- liquid
+                        assign blockRow         = section.blocks[nextIndex]
+                        assign blockRow_border  = blockRow.settings.show_border
+                     -%}
+
+							{%- capture blockID -%}{{sectionID}} .block-{{blockRow.id}}{%- endcapture -%}
+							{%- capture block_css -%}
+								{%- capture firstValue -%}
+									{%- liquid
+										assign _items_resp = blockRow.settings.items_resp | default: '4' | replace: ',', ';'
+										unless _items_resp contains '%'
+											assign _items_resp = _items_resp | replace: ';', ', 1fr;' | append: ', 1fr'
+											render 'css-resp', type: 'value', showFirst: true, css_value: _items_resp, css_property: 'grid-template-columns', css_value_before: 'repeat', css_split: ';'
+										else
+											render 'css-resp', type: 'value', showFirst: true, css_value: _items_resp, css_property: 'grid-template-columns', css_split: ';'
+										endunless
+										render 'css-resp', type: 'value', showFirst: true, css_value: blockRow.settings.grid_spc, css_property: 'grid-gap'
+										render 'css-resp', type: 'value', showFirst: true, css_value: blockRow.settings.margin, css_property: 'margin'
+									-%}
+								{%- endcapture -%}
+								{%- render 'css-resp', classID: blockID, nextClassID: '.d-grid', showFirst: true, css_values: firstValue -%}
+							{%- endcapture -%}
+							{%- assign section_css = section_css | append: block_css -%}
+
+							<div class="d-grid block-{{blockRow.id}}{% if blockRow_border %} show-border{% endif %}">
+								{%- assign nextIndex = nextIndex | plus: 1 -%}
+								{%- for block in section.blocks offset: nextIndex -%}
+									{%- liquid
+										unless block.type contains 'block_'
+											break
+										endunless
+
+										assign nextIndex = index | plus: forloop.index
+
+										if block.settings.nested
+											continue
+										endif
+
+										include 'block-custom', type: 'megaBlock', block: block
+									-%}
+								{%- endfor -%}
+
+							</div>
+						{%- endif -%}
+
+					</div>
+				{%- endif -%}
+			{%- endfor -%}
+		{%- if _layout == 'boxed' -%}</div>{%- endif -%}
+	</div>
+
+	<div class="mega-menu_mobile d-lg-none">
+      {%- include 'header-snippets', type: 'menuMobile', megaMenu: true -%}
+	</div>
+</div>
+
+{%- capture sectionCss -%}
+  	{{- section_css -}}
+  	{%- render 'css-resp', classID: sectionID, nextClassID: ' .mega-menu_desktop', css_value: section.settings.min_height, css_property: 'min-height' -%}
+{%- endcapture -%}
+{%- assign sectionCss = sectionCss | strip_newlines -%}
+{%- unless sectionCss == blank -%}<style>{{sectionCss}}</style>{%- endunless -%}
+{%- endcapture -%}
+
+{%- if _nav_link != blank and mainMenu.links.size > 0 -%}
+   {%- render 'compress', content: content -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": {
+    "en": "Mega Menu"
+  },
+  "tag": "section",
+  "class": "shopify-mega-menu w-100",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": {
+        "en": "Created by 'Mega Menu' section"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": {
+        "en": "Boxed layout"
+      },
+      "default": true
+    },
+    {
+      "type": "link_list",
+      "id": "nav_link",
+      "label": {
+        "en": "Main menu"
+      },
+      "default": "main-menu",
+      "info": {
+        "en": "Required. This menu must be same with menu in the header"
+      }
+    },
+    {
+      "type": "text",
+      "id": "min_height",
+      "label": {
+        "en": "Manual height"
+      },
+      "placeholder": {
+        "en": "E.g: 300px"
+      }
+    }
+  ],
+  "blocks": [
+    {
+      "type": "trigger",
+      "name": {
+        "en": "Mega Menu"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "trigger",
+          "label": {
+            "en": "Menu title"
+          }
+        },
+        {
+          "type": "text",
+          "id": "items_resp",
+          "label": {
+            "en": "Layout - Max number of items per row"
+          },
+          "default": "4",
+          "placeholder": {
+            "en": "E.g: 4 or 20% 80%"
+          }
+        },
+        {
+          "type": "text",
+          "id": "grid_spc",
+          "label": {
+            "en": "Item spacing"
+          },
+          "default": "15px",
+          "placeholder": {
+            "en": "E.g: 10px"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Block label"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Block label"
+          }
+        }
+      ]
+    },
+    {
+      "type": "mega_row",
+      "name": {
+        "en": "+ Mega Row"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "items_resp",
+          "label": {
+            "en": "Layout - Max number of items per row"
+          },
+          "default": "4",
+          "placeholder": {
+            "en": "E.g: 4 or 20% 80%"
+          }
+        },
+        {
+          "type": "text",
+          "id": "grid_spc",
+          "label": {
+            "en": "Item spacing"
+          },
+          "default": "15px",
+          "placeholder": {
+            "en": "E.g: 10px"
+          }
+        },
+        {
+          "type": "text",
+          "id": "margin",
+          "label": {
+            "en": "Margin"
+          },
+          "placeholder": {
+            "en": "E.g: 5px 20px 5px 20px"
+          },
+          "info": {
+            "en": "Order: Top Right Bottom Left"
+          }
+        },
+        {
+          "type": "checkbox",
+          "id": "show_border",
+          "label": {
+            "en": "Show Border"
+          }
+        }
+      ]
+    },
+    {
+      "type": "block_1_menu",
+      "name": {
+        "en": "+ Single Menu"
+      },
+      "settings": [
+        {
+          "type": "link_list",
+          "id": "menu_1",
+          "label": {
+            "en": "Menu item"
+          }
+        },
+        {
+          "type": "checkbox",
+          "id": "show_title",
+          "label": {
+            "en": "Show Menu title"
+          },
+          "default": true
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Block label"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Block label"
+          },
+          "default": "+ Single Menu"
+        }
+      ]
+    },
+    {
+      "type": "block_menu",
+      "name": {
+        "en": "+ Group Menu x4"
+      },
+      "settings": [
+        {
+          "type": "link_list",
+          "id": "menu_1",
+          "label": {
+            "en": "Menu item #1"
+          }
+        },
+        {
+          "type": "link_list",
+          "id": "menu_2",
+          "label": {
+            "en": "Menu item #2"
+          }
+        },
+        {
+          "type": "link_list",
+          "id": "menu_3",
+          "label": {
+            "en": "Menu item #3"
+          }
+        },
+        {
+          "type": "link_list",
+          "id": "menu_4",
+          "label": {
+            "en": "Menu item #4"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Block label"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Block label"
+          },
+          "default": "+ Group Menu x4"
+        }
+      ]
+    },
+    {
+      "type": "block_product",
+      "name": {
+        "en": "+ Single Product"
+      },
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": {
+            "en": "Product item"
+          }
+        },
+        {
+          "type": "checkbox",
+          "id": "show_border",
+          "label": {
+            "en": "Show Border"
+          },
+          "default": true
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Block label"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Block label"
+          },
+          "default": "+ Single Product"
+        }
+      ]
+    },
+    {
+      "type": "block_collection",
+      "name": {
+        "en": "+ Collection"
+      },
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": {
+            "en": "Collection item"
+          }
+        },
+        {
+          "type": "text",
+          "id": "items_resp",
+          "label": {
+            "en": "Max number of items per row"
+          },
+          "default": "4",
+          "placeholder": {
+            "en": "E.g: 4"
+          }
+        },
+        {
+          "type": "text",
+          "id": "total",
+          "label": {
+            "en": "Total items"
+          },
+          "default": "4",
+          "placeholder": {
+            "en": "E.g: 10"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Block label"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Block label"
+          },
+          "default": "+ Collection"
+        }
+      ]
+    },
+    {
+      "type": "block_banner",
+      "name": {
+        "en": "+ Banner with overlay"
+      },
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": {
+            "en": "Banner"
+          }
+        },
+        {
+          "type": "select",
+          "id": "banner_label",
+          "label": {
+            "en": "Label"
+          },
+          "options": [
+            {
+              "value": "none",
+              "label": {
+                "en": "None"
+              }
+            },
+            {
+              "value": "new",
+              "label": {
+                "en": "New"
+              }
+            },
+            {
+              "value": "sale",
+              "label": {
+                "en": "Sale"
+              }
+            },
+            {
+              "value": "hot",
+              "label": {
+                "en": "Hot"
+              }
+            }
+          ],
+          "default": "none"
+        },
+        {
+          "type": "textarea",
+          "id": "content_1",
+          "label": {
+            "en": "Heading"
+          }
+        },
+        {
+          "type": "textarea",
+          "id": "content_2",
+          "label": {
+            "en": "Subheading"
+          }
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": {
+            "en": "Button label"
+          }
+        },
+        {
+          "type": "url",
+          "id": "button_url",
+          "label": {
+            "en": "Button URL"
+          }
+        },
+        {
+          "type": "range",
+          "id": "btn_style",
+          "label": {
+            "en": "Button style"
+          },
+          "min": 1,
+          "max": 3,
+          "step": 1,
+          "default": 1
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": {
+            "en": "Product item"
+          }
+        },
+        {
+          "type": "select",
+          "id": "product_to_show",
+          "label": {
+            "en": "Show"
+          },
+          "options": [
+            {
+              "value": "price",
+              "label": {
+                "en": "Price"
+              }
+            },
+            {
+              "value": "sale",
+              "label": {
+                "en": "Sale percent"
+              }
+            }
+          ],
+          "default": "price"
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Nested with above block"
+          }
+        },
+        {
+          "type": "checkbox",
+          "id": "nested",
+          "label": {
+            "en": "Nested"
+          }
+        },
+        {
+          "type": "text",
+          "id": "margin",
+          "label": {
+            "en": "Margin"
+          },
+          "placeholder": {
+            "en": "E.g: 5px 20px 5px 20px"
+          },
+          "info": {
+            "en": "Order: Top Right Bottom Left"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Block label"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Block label"
+          },
+          "default": "+ Banner with overlay text"
+        }
+      ]
+    },
+    {
+      "type": "block_group_banner",
+      "name": {
+        "en": "+ Group Banner x4"
+      },
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "banner_1",
+          "label": {
+            "en": "Banner #1"
+          }
+        },
+        {
+          "type": "url",
+          "id": "banner_url_1",
+          "label": {
+            "en": "Link #1"
+          }
+        },
+        {
+          "type": "text",
+          "id": "banner_text_1",
+          "label": {
+            "en": "Text for Banner #1"
+          }
+        },
+        {
+          "type": "image_picker",
+          "id": "banner_2",
+          "label": {
+            "en": "Banner #2"
+          }
+        },
+        {
+          "type": "url",
+          "id": "banner_url_2",
+          "label": {
+            "en": "Link #2"
+          }
+        },
+        {
+          "type": "text",
+          "id": "banner_text_2",
+          "label": {
+            "en": "Text for Banner #2"
+          }
+        },
+        {
+          "type": "image_picker",
+          "id": "banner_3",
+          "label": {
+            "en": "Banner #3"
+          }
+        },
+        {
+          "type": "url",
+          "id": "banner_url_3",
+          "label": {
+            "en": "Link #3"
+          }
+        },
+        {
+          "type": "text",
+          "id": "banner_text_3",
+          "label": {
+            "en": "Text for Banner #3"
+          }
+        },
+        {
+          "type": "image_picker",
+          "id": "banner_4",
+          "label": {
+            "en": "Banner #4"
+          }
+        },
+        {
+          "type": "url",
+          "id": "banner_url_4",
+          "label": {
+            "en": "Link #4"
+          }
+        },
+        {
+          "type": "text",
+          "id": "banner_text_4",
+          "label": {
+            "en": "Text for Banner #4"
+          }
+        },
+        {
+          "type": "header",
+          "content": {
+            "en": "Block label"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Block label"
+          },
+          "default": "+ Group Banner x4"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

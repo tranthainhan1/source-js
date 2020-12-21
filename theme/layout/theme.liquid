@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="{{ shop.locale }}">
+<head>
+  {%- if settings.favicon != nil -%}
+  <link rel="shortcut icon" type="image/x-icon" href="{{ settings.favicon | img_url: '32x32' }}">
+  {%- else -%}
+  <link rel="shortcut icon" type="image/x-icon" href="{{ 'favicon.png' | asset_url }}">
+  {%- endif -%}
+  <meta charset="utf-8">
+  <meta name="viewport" content="viewport-fit=cover, width=device-width,initial-scale=1, user-scalable=0"/>
+  <meta name="google" content="notranslate">
+  <meta name='HandheldFriendly' content='True'>
+  <meta name='MobileOptimized' content='360'>
+  <meta http-equiv="cleartype" content="on">
+  <meta name="theme-color" content="{{ settings.main_color }}">
+  {%- if page_description -%}
+    <meta name="description" content="{{ page_description | escape }}{% if current_tags %} {{ 'general.meta.tagged_html' | t: tags: meta_tags | escape }}.{% endif %}{% if current_page != 1 %} {{ 'general.meta.page' | t: page_number: current_page }}.{% endif %}" />
+  {%- endif -%}
+  {%- render 'fb-open-graph' -%}
+
+  <title>{{ page_title }}{%- if current_tags -%}{% assign meta_tags = current_tags | join: ', ' %} &ndash; {{ 'general.meta.tags' | t: tags: meta_tags }}{% endif %}{% if current_page != 1 %} &ndash; {{ 'general.meta.page' | t: page: current_page }}{% endif %}{% unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless %}</title>
+  <link rel="preconnect dns-prefetch" href="https://fonts.shopifycdn.com">
+  <link rel="preconnect dns-prefetch" href="https://cdn.shopify.com">
+  <link rel="preconnect dns-prefetch" href="https://v.shopify.com">
+  <link rel="preconnect dns-prefetch" href="https://cdn.shopifycloud.com">
+  <link rel="preconnect dns-prefetch" href="{{ shop.url }}">
+  <link rel="preconnect dns-prefetch" href="https://fonts.googleapis.com" crossorigin>
+  {% comment %} <link rel="preload" href="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" as="script"> {% endcomment %}
+
+  <link href="{{'main_style.css' | asset_url}}" rel="preload" as="style">
+  <link href="{{'main_style.css' | asset_url}}" rel="stylesheet" as="style">
+  {%- render 'theme-font' -%}
+  <style>
+    #main-content{
+      min-height: 100vh;
+    }
+  </style>
+
+  {% include 'css_variables' %}
+
+  {% render 'js-loader'  %}
+  <script>
+    ( function(){
+      Loader.require('lazysizes','scripts');
+      Loader.require('ls.include','scripts');
+      Loader.require('ls.rias','scripts');
+      Loader.require('ls.bgset','scripts');
+    })();
+  </script>
+  {%- capture content_for_header -%}
+    {{ content_for_header }}
+  {%- endcapture -%}
+  {{ content_for_header | remove: '<link href="https://monorail-edge.shopifysvc.com" rel="dns-prefetch">' }}
+
+  {% comment %} {%- capture WLCPInclude -%}
+    {% include 'arn_wl_cp_settings' %}
+    {% include 'arn_wl_cp_styles' %}
+    {% include 'arn_icons_define' %}
+    {% if shop.metafields.arena.wl_cp_settings.general_settings.app_script == false %}
+    <script defer crossorigin="anonymous" src="{{ 'arn-wishlist-compare.js'  | asset_url }}"></script>
+    {% endif %}
+  {%- endcapture -%}
+  {%- unless WLCPInclude contains 'Liquid error' -%}{{ WLCPInclude }}{%- endunless -%} {% endcomment %}
+</head>
+{%- capture body_class -%}
+  {{--}}template template-{{ template | replace: '.', '-' | replace: '/', '-' -}}
+  {{--}}{%- if settings.enable_left_column -%}|has-left-column {%- endif -%}
+  {{--}}|page-layout-{{settings.page_layout-}}
+{%- endcapture -%}
+<body class="{{body_class | split: '|' | join: ' '}}">
+  {%- render 'snippet-theme', type: 'themeCSS' -%}
+  <div class="boxed-wrapper">
+    {%- include 'header'  -%}
+
+    <main id="main-content">
+      {%- include 'breadcrumb', pageLayout: settings.page_layout -%}
+      {{ content_for_layout }}
+    </main>
+
+    <footer class="footer">
+      {%- liquid
+        capture checkAdmin
+          style
+            echo settings.main_color
+          endstyle
+        endcapture
+      -%}
+
+      {%- if checkAdmin contains 'setting' -%}
+        {%- if settings.enable_footerWidget -%}{%- section 'footer-widget' -%}{%- endif -%}
+        {%- section 'footer' -%}
+      {%- else -%}
+        {%- if settings.enable_footerWidget -%}
+          <div class="lazyload" data-lazyqueue data-include="{{routes.root_url}}?section_id=footer-widget" data-type="footer"></div>
+        {%- endif -%}
+        <div class="lazyload" data-lazyqueue data-include="{{routes.root_url}}?section_id=footer"></div>
+      {%- endif -%}
+    </footer>
+
+    {%- if settings.enable_mobilebar -%}{%- section 'mobile-bar' -%}{%- endif -%}
+    {%- if settings.enable_newsletter -%}{%- section 'section-newsletter' -%}{%- endif -%}
+    {%- if settings.cart_type != 'page' -%}
+      <div class="drawer drawer-right drawer-cart" id="cart_drawer">
+        <div class="drawer_overlay js-drawer-close"></div>
+        <div class="lazy-drawer-cart"  data-include="{{routes.search_url}}?q=cartDrawer&view=header">
+          {%- render 'svg' type:'is-loading' -%}
+        </div>
+      </div>
+    {%- endif -%}
+
+  </div>
+
+
+  {%- capture script_inline -%}
+    {%- case template -%}
+      {%- when  'index' -%}
+        Loader.require('easytimer', 'scripts');
+        Loader.require('home','scripts');
+      {%- when  'collection' -%}
+        Loader.require('easytimer', 'scripts');
+        Loader.require('collection','scripts');
+      {%- when 'cart' -%}
+        Loader.require('easytimer', 'scripts');
+        Loader.require('cart', 'scripts')
+      {%- when 'blog' -%}
+        Loader.require('blog', 'scripts')
+      {%- when 'product.no-sidebar' -%}
+        Loader.require('easytimer', 'scripts');
+        Loader.require('product.no-sidebar', 'scripts');
+      {%- when 'product.with-sidebar' -%}
+        Loader.require('easytimer', 'scripts');
+        Loader.require('product.with-sidebar', 'scripts');
+      {%- when 'product.pre-order' -%}
+        Loader.require('easytimer', 'scripts');
+        Loader.require('product', 'scripts');
+      {%- when  'product' -%}
+        Loader.require('easytimer', 'scripts');
+        {%- case settings.product_page -%}
+          {%- when 'default' -%}
+            Loader.require('product', 'scripts');
+          {%- when 'no-sidebar' -%}
+            Loader.require('product.no-sidebar', 'scripts');
+          {%- when 'with-sidebar' -%}
+            Loader.require('product.with-sidebar', 'scripts');
+        {%- endcase -%}
+
+      {%- else -%}
+        Loader.require('other-page', 'scripts');
+    {% endcase %}
+
+    window.theme = Object.assign( window.theme || {}, {
+      template: "{{template}}",
+      string: {
+        cartNumber: "{{ 'dialog.cart_notify.number_in_cart' | t }}",
+        cartNumbers: "{{ 'dialog.cart_notify.numbers_in_cart' | t }}"
+      },
+      currency: {
+        moneyFormat: "{{shop.money_format}}",
+        symbol: "{{cart.currency.symbol}}"
+      },
+      search: {
+        "config" : {
+          "resources[type]": "{{settings.search_type}}",
+          "resources[limit]": "{{settings.search_limit}}",
+          "resources[options][unavailable_products]": "{{settings.search_unavailable_products}}",
+        },
+        strings : {
+          product: "{{ 'general.search.product' | t }}",
+          article: "{{ 'general.search.article' | t}}",
+          collection: "{{ 'general.search.collection' | t}}",
+          page: "{{ 'general.search.page' | t}}",
+        }
+      }
+    });
+  {%- endcapture -%}
+
+  <script>
+    {{script_inline}}
+    document.addEventListener("DOMContentLoaded", function(){Loader.load()});
+  </script>
+
+  {%- render 'modal'  -%}
+
+
+
+  <script>
+    let button = parent.document.querySelector('[class*="Polaris-Button--primary"]')
+    parent.document.addEventListener('keydown', function(e){
+      if(e.ctrlKey && e.keyCode === 83){
+        e.preventDefault();
+        button.click();
+      }
+    })
+  </script>
+  <style>
+  @media screen and (max-width: 991.9px){
+
+    #arnExt{display:none;}
+  }
+  </style>
+</body>
+</html>

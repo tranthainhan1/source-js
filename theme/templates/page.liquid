@@ -1,0 +1,10 @@
+{%- liquid
+	assign _layout = settings.page_layout
+-%}
+{%- if _layout == 'boxed' -%}<div class="container">{%- endif -%}
+  <div id="col-main">
+    <div class="page-content">
+      {{ page.content }}
+    </div>
+  </div>
+{%- if _layout == 'boxed' -%}</div>{%- endif -%}

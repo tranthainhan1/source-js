@@ -1,0 +1,354 @@
+{%- if settings.page_layout == 'boxed' or section.settings.layout == 'boxed' -%}
+  {%- assign isBoxed = true -%}
+{%- else -%}
+  {%- assign isBoxed = false -%}
+{%- endif -%}
+
+{%- liquid
+  assign enable_info          = section.settings.enable_info
+  assign info_column_position = section.settings.info_column_position
+  assign info_bg_color        = section.settings.info_bg_color
+  assign heading              = section.settings.heading
+  assign desc                 = section.settings.description
+  assign address              = section.settings.address
+  assign phone_number         = section.settings.phone_number
+  assign fax_number           = section.settings.fax_number
+  assign email_1              = section.settings.email_1
+  assign email_2              = section.settings.email_2
+  assign work_time            = section.settings.work_time
+  assign social_widget        = section.settings.social_widget
+-%}
+
+{%- if enable_info -%}
+  {%- capture info -%}
+    <div class="col-12 col-lg-4">
+      <div class="page-contact_info" style="background-color: {{info_bg_color}};">
+        <div class="info">
+          <div class="info_wrapper">
+            <div class="headline">
+              <h4 class="title">{{heading}}</h4>
+              <p class="desc">{{desc}}</p>
+            </div>
+            <div class="info_body">
+              {%- if address != blank -%}
+                <h4>{{address}}</h4>
+              {%- endif -%}
+
+              {%- if phone_number != blank -%}
+                <div class="phone">
+                  <span class="svg_element-ui">
+                    {%- render 'svg' type:'phone' -%}
+                  </span>
+                  <span class="number">{{phone_number}}</span>
+                </div>
+              {%- endif -%}
+
+              {%- if fax_number != blank -%}
+                <div class="fax">
+                  <span class="svg_element-ui">
+                    {%- render 'svg' type:'fax' -%}
+                  </span>
+                  <span class="number">{{fax_number}}</span>
+                </div>
+              {%- endif -%}
+              {%- if email_1 != blank -%}
+                <div class="email-1">
+                  <span class="svg_element-ui">
+                    {%- render 'svg' type:'support' -%}
+                  </span>
+                  <a href="mailto:email_1">{{email_1}}</a>
+                </div>
+              {%- endif -%}
+
+              {%- if email_2 != blank -%}
+                <div class="email-2">
+                  <span class="svg_element-ui">
+                    {%- render 'svg' type:'email' -%}
+                  </span>
+                  <a href="mailto:email_2">{{email_2}}</a>
+                </div>
+              {%- endif -%}
+
+              {%- if work_time != blank -%}
+                <div class="work-time">
+                  <span class="svg_element-ui">
+                    {%- render 'svg' type: 'block' -%}
+                  </span>
+                  <span class="content">{{work_time}}</span>
+                </div>
+              {%- endif -%}
+
+              {%- if social_widget -%}
+                <div class="social">
+                  {%- render 'social-media-icons'  -%}
+                </div>
+              {%- endif -%}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {%- endcapture -%}
+
+  {%- case info_column_position -%}
+    {%- when 'left' -%}
+      {%- assign left_info = info -%}
+    {%- when 'right' -%}
+      {%- assign right_info = info -%}
+  {%- endcase -%}
+{%- endif -%}
+
+
+<div class="row">
+  {{-left_info-}}
+  <div class="{% if enable_info %}col-12 col-lg-8 {%else%} col-12 {% endif %}">
+    <div class="page-contact_form" style="background-color: {{section.settings.contact_form_bg_color}};">
+      <div class="contact-form">
+        <div class="title">
+          {% if section.settings.contact_form_title != blank %}<h4>{{ section.settings.contact_form_title }}</h4>{% endif %}
+        </div>
+
+        {% form 'contact', class: '' %}
+
+          {% if form.posted_successfully? %}
+            <div class="alert alert-success">{{'contact.form.post_success' | t }}</div>
+          {% endif %}
+
+          {% if form.errors %}
+            <div class="alert alert-error">{{ form.errors | default_errors }}</div>
+          {% endif %}
+
+          <div id="contact-form">
+            <div class="row">
+              <div class="form-group col-lg-6 col-md-12">
+                <label for="name">{{ 'contact.form.name' | t }}<span class="req">*</span></label>
+                <input type="text" id="name" class="form-control" value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.first_name }} {{ customer.last_name }}{% endif %}" name="contact[name]" />
+              </div>
+
+              <div class="form-group col-lg-6 col-md-12">
+                <label for="email">{{ 'contact.form.email' | t }}<span class="req">*</span></label>
+                <input required type="email" id="email" class="form-control" value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}" name="contact[email]" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">{{'contact.form.phone' | t }}</label>
+              <input type="text" id="phone" class="form-control" value="{{ form.phone }}" name="contact[phone]" />
+            </div>
+
+            <div class="form-group{% if form.errors contains 'body' %} error{% endif %}">
+              <label for="message">{{ 'contact.form.message' | t }}</label>
+              <textarea required id="message" class="form-control" cols="40" rows="7" name="contact[body]">{{ form.body }}</textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-1">{{'contact.form.submit_button' | t }}</button>
+            </div>
+          </div>
+
+        {% endform %}
+      </div>
+    </div>
+  </div>
+  {{-right_info-}}
+</div>
+
+{% if section.settings.enable_contact_map %}
+  <div class="map-wrapper">
+    <div id="page_contact_map" class="map" style="height: 418px;"></div>
+  </div>
+  <script defer src="//maps.googleapis.com/maps/api/js?key=AIzaSyCmqy8wIh9KCnj_WKXqaskSCM-AUpXd01Q&callback=initMap"></script>
+  <script>
+    function initMap () {
+      let mapContainer = document.getElementById('page_contact_map');
+      if (!!mapContainer) {
+        var locations = [
+          ['<div class="map-info-box"><p>{{ shop.address.street }}, {{ shop.address.city }}, {{ shop.address.country }}</p></div>', {{ section.settings.contact_latlong }}, 9]
+        ];
+
+        var map = new google.maps.Map(mapContainer, {
+            zoom: {{section.settings.contact_zoom_lv}},
+            scrollwheel: {{section.settings.contact_scroll}},
+            center: new google.maps.LatLng({{ section.settings.contact_latlong }}),
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
+
+        var infowindow = new google.maps.InfoWindow();
+
+
+        var marker, i;
+
+        for (i = 0; i < locations.length; i++) {
+          marker = new google.maps.Marker({
+              position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+              map: map,
+              animation: google.maps.Animation.DROP,
+              icon: '{{"pin.png" | asset_url}}',
+          });
+
+          google.maps.event.addListener(marker, 'click', (function(marker, i) {
+              return function() {
+                  infowindow.setContent(locations[i][0]);
+                  infowindow.open(map, marker);
+              }
+          })(marker, i));
+        }
+      }
+    };
+  </script>
+{% endif %}
+
+
+
+{% schema %}
+  {
+    "name": "Contact Page",
+    "settings": [
+      {
+        "type":"header",
+        "content":"Layout"
+      },
+      {
+        "type":"checkbox",
+        "id":"layout",
+        "label":"Layout Boxed",
+        "default":true
+      },
+      {
+        "type":"header",
+        "content":"Info Column"
+      },
+      {
+        "type" : "checkbox",
+        "id" : "enable_info",
+        "label" : {
+          "en": "Enable info column"
+        },
+        "default" : true
+      },
+      {
+        "type":"select",
+        "id":"info_column_position",
+        "label":"Position",
+        "options":[
+          {"value":"left", "label":"Left"},
+          {"value":"right", "label":"Right"}
+        ],
+        "default":"left"
+      },
+      {
+        "type":"color",
+        "id":"info_bg_color",
+        "label":"Background color",
+        "default":"#ffffff"
+      },
+      {
+        "type":"text",
+        "id":"heading",
+        "label":"Heading",
+        "default":"Get in touch"
+      },
+      {
+        "type":"textarea",
+        "id":"description",
+        "label":"Description",
+        "default":"The Alumalite Big Step Side Bars install in minutes, providing great looks, convenience and safety for your vehicle."
+      },
+      {
+        "type":"text",
+        "id":"address",
+        "label":"Address",
+        "default":"Chromium Co , 25 Silicon Road, London D04 89GR"
+      },
+      {
+        "type":"text",
+        "id":"phone_number",
+        "label":"Phone number",
+        "default":"+27 34 66 2455-198"
+      },
+      {
+        "type":"text",
+        "id":"fax_number",
+        "label":"Fax number",
+        "default":"+27 34 66 2455-198"
+      },
+      {
+        "type":"text",
+        "id":"email_1",
+        "label":"Email #1",
+        "default":"info@chromium.com"
+      },
+      {
+        "type":"text",
+        "id":"email_2",
+        "label":"Email #2",
+        "default":"support@chromium.com"
+      },
+      {
+        "type":"text",
+        "id":"work_time",
+        "label":"Work time",
+        "default":"Monday – Friday  8:00 to 19:00"
+      },
+      {
+        "type":"checkbox",
+        "id":"social_widget",
+        "label":"Show social widget",
+        "default":true
+      },
+      {
+        "type": "header",
+        "content": "Contact form"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_contact_form",
+        "label": "Enable Contact form",
+        "default": true
+      },
+      {
+        "type":"color",
+        "id":"contact_form_bg_color",
+        "label":"Background color",
+        "default":"#ffffff"
+      },
+      {
+        "type": "text",
+        "id": "contact_form_title",
+        "label": "Heading",
+        "default": "Leave A Message"
+      },
+      {
+        "type": "header",
+        "content": "Map settings"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_contact_map",
+        "label": "Enable Map",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "contact_latlong",
+        "label": "Latitude and Longitude",
+        "info": "Please click [here](http:\/\/latlong.net) to get Latitude and Longitude",
+        "default": "51.514863, -0.133689"
+      },
+      {
+        "type": "range",
+        "id": "contact_zoom_lv",
+        "label": "Select Zoom Level",
+        "step" : 1,
+        "min" : 1,
+        "max" : 21,
+        "default": 15
+      },
+      {
+        "type": "checkbox",
+        "id": "contact_scroll",
+        "label": "Scroll Wheel"
+      }
+    ]
+  }
+{% endschema %}

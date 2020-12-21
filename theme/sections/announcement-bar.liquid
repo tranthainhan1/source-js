@@ -1,0 +1,366 @@
+{%- if section.blocks.size > 0 -%}
+
+  {%- liquid
+    if section.settings.boxed_layout
+      assign _layout = 'boxed'
+    else
+      assign _layout = 'full'
+    endif
+  -%}
+
+  {%- assign sectionID = '.announcement-bar' -%}
+  {%- capture content -%}
+    <div class="announcement-bar layout-{{_layout}}" data-section-type="annoucement-bar" data-section-id="{{section.id}}">
+      {% if _layout == 'boxed' %}<div class="container">{%- endif -%}
+
+        <div class="wrapper d-grid">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'column' or forloop.first and section.blocks[0].type != 'column' -%}
+              {%- assign column_count = column_count | plus: 1 -%}
+              {%- liquid
+                assign columnIndex   = forloop.index
+                assign block_ID      = block.id
+                assign flexAlign     = block.settings.align | default: 'center' | replace: 'left', 'flex-start' | replace: 'right', 'flex-end'
+                assign blockVisible  = block.settings.visible | replace: '1', 'null' | replace: '0', 'none'
+
+                if forloop.first and section.blocks[0].type != 'column'
+                  assign columnIndex = 0
+                endif
+              -%}
+              {%- capture blockID -%}{{sectionID}} .block-{{- block_ID -}}{%- endcapture -%}
+              <div class="annoubar-column block-{{- block_ID -}}" {{block.shopify_attributes}}>
+
+                {%- comment -%}
+                  **
+                  * Column Items
+                  *
+                {%- endcomment-%}
+                {%- for block in section.blocks offset: columnIndex -%}
+                  {%- if block.type == 'column' -%}{%- break -%}{%- endif -%}
+
+                  <div class="annoubar-item" {{block.shopify_attributes}}>
+                    {%- case block.settings.type -%}
+                      {%- when 'text' -%}
+                        {{ block.settings.text }}
+                      {% comment %} end {% endcomment %}
+                      {%- when 'account'-%}
+                        <div class="account">
+                          <a href="#" onclick="return false">
+                            {% render 'svg' type: 'user' %}
+                            <span>{{ 'section.announcement_bar.hello' | t}}</span>
+                          </a>
+                          <div class="account-action">
+                            <a href="{{routes.account_login_url}}">{{ 'section.announcement_bar.sign_in' | t}}</a>
+                            <a href="{{routes.account_register_url}}">{{ 'section.announcement_bar.register' | t}}</a>
+                          </div>
+                        </div>
+                      {% comment %} end {% endcomment %}
+                      {%- when 'currency_with_language'-%}
+                        <div class="currency-with-language">
+                          <a href="#" onclick="return false">
+                            {% render 'svg' type: 'setting' %}
+                          </a>
+                        </div>
+                      {%- when 'menu' -%}
+                        {% liquid
+                          assign menu_handle =  block.settings.menu
+                        %}
+                        <ul class="menu-list">
+                          {%- unless menu_handle == blank -%}
+                            {%- for l in linklists[menu_handle].links -%}{%- include 'nav-link', l: l -%}{%- endfor -%}
+                          {%- else -%}
+                            {%- for i in (1..3) -%}{%- render 'nav-link', type: 'empty' -%}{%- endfor -%}
+                          {%- endunless -%}
+                        </ul>
+                      {% comment %} end {% endcomment %}
+                    {%- endcase -%}
+                  </div>
+                {%- endfor -%}
+
+                {%- capture block_css -%}
+                  {%- render 'css-resp', classID: blockID, css_value: flexAlign, css_property: 'justify-content' -%}
+                  {%- render 'css-resp', classID: blockID, css_value: blockVisible, css_property: 'display' -%}
+                {%- endcapture -%}{%- assign section_css = section_css | append: block_css -%}
+              </div>
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+
+      {% if _layout == 'boxed' %}</div>{%- endif -%}
+    </div>
+    {%- capture sectionCss -%}{{- section_css -}}
+      .announcement-bar{
+        background-color: {{ section.settings.announbar_bg_color | default: 'rgba(0,0,0,0)' }};
+      }
+      .announcement-bar * {
+        color: {{ section.settings.announbar_text_color | default: 'rgba(0,0,0,0)' }};
+      }
+      .announcement-bar svg path {
+        fill: {{ section.settings.announbar_text_color | default: 'rgba(0,0,0,0)' }};
+      }
+      {%- if hasBorderBottom -%}{{- sectionID }}{border-bottom: {{topbar_border_size}}px solid {{topbar_border}};}{%- endif -%}
+      {{- -}}.announcement-bar .menu-list > li:not(:last-child),
+      {{- -}}.announcement-bar .annoubar-column > div:not(:last-child),
+      {{- -}}.announcement-bar .select-dropdown-group-ui > div:not(:last-child) {border-color: {{_border_bw_color}};}
+      {{- -}}@media screen and (min-width: 992.1px){.announcement-bar .wrapper {grid-template-columns: repeat({{column_count}}, 1fr)}}
+      {%- liquid
+        render 'css-resp', classID: sectionID, nextClassID: ' .wrapper', css_value: section.settings.grid_gap, css_property: 'grid-gap'
+        assign sectionVisibility  = section.settings.visible | replace: '1', 'null' | replace: '0', 'none'
+        render 'css-resp', classID: sectionID, css_value: sectionVisibility, css_property: 'display'
+      -%}
+    {%- endcapture -%}
+
+    {%- assign sectionCss = sectionCss | strip_newlines -%}
+    {%- unless sectionCss == blank -%}<style>{{sectionCss}}</style>{%- endunless -%}
+  {%- endcapture -%}
+
+
+  {%- render 'compress' content: content -%}
+{%- endif -%}
+
+
+{% schema %}
+{
+  "name": {
+    "en": "Announcement Bar"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": {
+        "en": "Boxed layout"
+      },
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Layout"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "visible",
+      "label": {
+        "en": "Section visibility"
+      },
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "announbar_bg_color",
+      "label": {
+        "en": "Background color"
+      },
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "announbar_text_color",
+      "label": {
+        "en": "Text color"
+      },
+      "default": "#5B6C8F"
+    },
+    {
+      "type": "text",
+      "id": "grid_layout",
+      "label": {
+        "en": "Column Grid layout"
+      },
+      "default": "100%",
+      "placeholder": {
+        "en": "E.g: 70% 30% or 100%"
+      }
+    },
+    {
+      "type": "text",
+      "id": "grid_gap",
+      "label": {
+        "en": "Column Grid spacing"
+      },
+      "placeholder": {
+        "en": "E.g: 15px"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Border settings"
+      }
+    },
+    {
+      "type": "paragraph",
+      "content": {
+        "en": "+ Between Content"
+      }
+    },
+    {
+      "type": "color",
+      "id": "border_bw_color",
+      "label": {
+        "en": "Border color"
+      },
+      "default": "#103178"
+    },
+    {
+      "type": "range",
+      "id": "border_bw_color_opacity",
+      "label": {
+        "en": "Border color opacity"
+      },
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "unit": "%",
+      "default": 10
+    },
+    {
+      "type": "paragraph",
+      "content": {
+        "en": "+ Bottom"
+      }
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "label": {
+        "en": "Border size"
+      },
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "color",
+      "id": "topbar_border",
+      "label": {
+        "en": "Border color"
+      },
+      "default": "#103178"
+    },
+    {
+      "type": "range",
+      "id": "border_color_opacity",
+      "label": {
+        "en": "Border color opacity"
+      },
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "unit": "%",
+      "default": 10
+    }
+  ],
+  "blocks": [
+    {
+      "type": "column",
+      "limit": 5,
+      "name": {
+        "en": "Column"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Block label"
+          },
+          "default": "Column"
+        },
+        {
+          "type": "text",
+          "id": "align",
+          "label": {
+            "en": "Alignment"
+          },
+          "placeholder": {
+            "en": "E.g: left or center"
+          }
+        },
+        {
+          "type": "text",
+          "id": "visible",
+          "label": {
+            "en": "Block visibility"
+          },
+          "placeholder": {
+            "en": "E.g: 1,0"
+          },
+          "info": {
+            "en": "1: Show; 0: Hide"
+          }
+        }
+      ]
+    },
+    {
+      "type": "block_items",
+      "name": {
+        "en": "[+] Item Content"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Block label"
+          }
+        },
+        {
+          "type": "select",
+          "id": "type",
+          "label": {
+            "en": "Content type"
+          },
+          "options": [
+            {
+              "value": "text",
+              "label": {
+                "en": "Text"
+              }
+            },
+            {
+              "value": "menu",
+              "label": {
+                "en": "Menu"
+              }
+            },
+            {
+              "value": "account",
+              "label": {
+                "en": "Account"
+              }
+            },
+            {
+              "value": "currency_with_language",
+              "label": {
+                "en": "Language & Currency"
+              }
+            }
+          ],
+          "default": "text"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": {
+            "en": "Content"
+          },
+          "default": "<p><b>100% Secure delivery</b> without contacting the courier</p>"
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": {
+            "en": "Menu"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,148 @@
+{% assign _header = content_for_header | split: "," %}
+{% assign page_url = '' %}
+
+{% assign _headerLen = _header.size | minus: 1 %}
+{% for i in (0.._headerLen) %}
+	{% if _header[i] contains 'pageurl'%}
+		{% assign page_url = _header[i] %}
+	{% endif %}
+{% endfor%}
+{% assign page_url = page_url | replace:'"','' %}
+
+{% assign wishlist_enable = shop.metafields.arena.wl_cp_settings.wishlist_settings.wishlist_enable %}
+{% assign number_visible = 5 %}
+<!--json-->
+{% assign UserWL = customer.metafields.arena.customer_wishlist %}
+{% assign WLLimit = shop.metafields.arena.wl_cp_settings.wishlist_settings.wishlist_product_number %}
+
+{% assign UserWL = UserWL | slice: 0,WLLimit %}
+{% assign total_page = UserWL.size | times: 1.0 | divided_by: number_visible | ceil %}
+<div class="page-arn-wishlist container">
+    <h1 class="page-title">{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.wishlist_page_title }}</h1>
+    {% if wishlist_enable == false %}
+        <p>{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.wishlist_disable_msg }}</p>
+    {% else %}
+        {% if customer.id == blank %}
+            <p class="msg">{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.wishlist_login_msg }}</p>
+        {% else %}
+            {% if UserWL.size <= 0 %}
+                <p class="no-wishlist-msg msg">{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.wishlist_empty_msg }}</p>
+            {% else %}
+                {% assign cur_page = '' %}
+                {% assign start_index = -1 %}
+                {% assign end_index = -1 %}  
+                {% if page_url contains '?' %}
+                    {% assign params = page_url | split:"?" %}
+                    {% assign params = params[1] | split: "\u0026" %}
+                    
+                    {% for param in params %}
+                        {% if param contains 'page' %}
+                            {% assign paramSplit = param | split: "=" %}	
+                            {% assign cur_page = paramSplit[1] | plus:0 %}
+                        {% endif %}
+                    {% endfor %}
+
+                {% endif %}
+                
+                {% if cur_page == blank %}
+                    {% assign cur_page = 1 %}
+                    {% assign start_index = 1 %} 
+                        {% assign condition = start_index | plus: number_visible | minus: 1 %}
+                    {% if condition > UserWL.size %}
+                        {% assign end_index = UserWL.size %}
+                    {% else %}
+                        {% assign end_index = start_index | plus:number_visible | minus:1 %}
+                    {% endif %} 	
+                {% else %}
+                    {% if cur_page < 1 %}  
+                        {% assign cur_page = 1 %}
+                    {% endif %}
+                        
+                    {% if cur_page > total_page %}  
+                            {{total_page}}
+                        {% assign cur_page = total_page %}
+                    {% endif %}
+
+                    {% assign start_index = cur_page | minus:1 | times:number_visible | plus: 1 %}  
+                    {% assign condition = start_index | plus: number_visible | minus: 1 %}
+
+                    {% if condition > UserWL.size %}
+                        {% assign end_index = UserWL.size %}
+                    {% else %}
+                        {% assign end_index = start_index | plus:number_visible | minus:1 %}
+                    {% endif %} 
+                {% endif %}
+                <!--Table here-->
+                <table class="wishlist-table arn_pending">
+                    <thead>
+                        <tr>
+                            <th class="product-remove-heading"></th>
+                            <th class="product-image-heading"></th>
+                            <th class="product-title-heading">{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.table_product_heading }}</th>
+                            <th class="product-price-heading">{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.table_price_heading }}</th>
+                            <th class="product-available-heading">{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.table_available_heading }}</th>
+                            <th class="product-detail-heading"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in (start_index..end_index) %}
+                            {% assign idx = i | minus: 1 %}
+                            {% assign item = customer.metafields.arena.customer_wishlist[idx] %}
+                            {% assign handle = item | strip %}
+                            <tr class="wishlist-item">
+                                {% assign productItem = all_products[handle] %}
+                                <td class="product-remove-btn">
+                                    <a data-arn-action="remove" data-handle='{{ productItem.handle }}' class='{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.wishlist_remove_class }} {% if shop.metafields.arena.wl_cp_settings.wishlist_settings.wishlist_enable == false %}disabled{% endif %}' href="javascript:;">
+                                        <svg width="{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.remove_class_icon.width }}" height="{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.remove_class_icon.height }}" class="arn_icon arn_icon-remove-wishlist">
+                                            <use xlink:href="#arn_icon-remove-wishlist"></use>
+                                        </svg>
+                                        <svg width="{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.remove_class_icon.width }}" height="{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.remove_class_icon.height }}" class="arn_icon arn_icon-preloader">
+                                            <use xlink:href="#arn_icon-preloader"></use>
+                                        </svg>
+                                    </a>
+                                </td>
+                                <td class="product-image">
+                                <img src="{{ productItem.featured_image | product_img_url: 'small'}}"/>
+                                </td>
+                                <td class="product-title">{{ productItem.title }}</td>
+                                <td class="product-price">{{ productItem.price | money}}</td>
+                                <td class="product-available">
+                                {% if productItem.available %}
+                                <span class="instock">{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.table_instock }}</span>
+                                {% else %}
+                                <span class="outstock">{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.table_outstock }}</span>
+                                {% endif %}	
+                                </td>
+                                <td class="product-detail">
+                                <a href="{{ productItem.url }}" class="view-btn">{{ shop.metafields.arena.wl_cp_settings.wishlist_settings.table_view_btn }}</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <svg width="64" height="64" class="arn_icon arn_icon-preloader"><use xlink:href="#arn_icon-preloader"></use></svg>
+                {% if total_page > 1 %}
+                    <ul class="wishlist-paginator">
+                        {% for i in (1..total_page) %}
+                            {% if i != 1 %}
+                                {% assign pageQuery = '?page=' | append: i %}
+                            {% else %}
+                                {% assign pageQuery = '' %}
+                            {% endif %}
+                            <li class="wishlist-paging--item {% if i == cur_page %}active{% endif %}">
+                                {% if i == cur_page %}
+                                    <span>{{ i }}</span>
+                                {% else %}
+                                    <a href="/pages/arena-wishlist-page{{pageQuery}}">{{ i }}</a>	
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+	{% endif %}
+	<script type="text/javascript">
+		document.getElementsByTagName("body")[0].classList.add("arn-wishlist-page");
+	</script>
+</div>

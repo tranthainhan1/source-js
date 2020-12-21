@@ -1,0 +1,26 @@
+{%- liquid
+    assign _pageLayout = settings.page_layout
+-%}
+<div class="page-404">
+  {%- if _pageLayout == 'boxed' -%}<div class="container">{%- endif -%}
+    <div class="page-content">
+      <div class="row">
+        <div class="col-12 text-center">
+          <div class="page-text-content">
+            <h1>{{- 'general.404_page.title' | t -}}</h1>
+            <h2>{{- 'general.404_page.subtitle' | t -}}</h2>
+            <p>{{- 'general.404_page.text_redirect' | t -}}</p>
+              <form action="/search">
+                <div class="form-group">
+                  <input type="text" value="" name="q" placeholder="{{ 'general.404_page.search_placeholder' | t}}">
+                  <button class='btn btn-1' type="submit">{{ 'general.404_page.search' | t}}</button>
+                </div>
+              </form>
+            <a href="{{ routes.root_url }}" class="homepage-redirect"><span class="svg_element-ui">{%- render 'svg' type: 'angle-left' -%}</span>{{- 'general.404_page.button_redirect' | t -}}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {%- if _pageLayout == 'boxed' -%}</div>{%- endif -%}
+
+</div>

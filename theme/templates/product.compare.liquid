@@ -1,0 +1,98 @@
+{% layout none %}
+{% capture _sale_label %}<span class="label-sale"><span class="sale-text">{{ 'products.labels.sale' | t }}</span></span>{% endcapture %}
+{% capture _new_label %}<span class="label-new"><span class="new-text">{{ 'products.labels.new' | t }}</span></span>{% endcapture %}
+{% capture _deal_label %}<span class="label-deal"><span class="deal-text">{{ 'products.labels.deal' | t }}</span></span>{% endcapture %}
+{% capture _product_rate %}{{ product.metafields.spr.reviews }}{% endcapture %}
+{% capture output %}
+		        {% assign result_url = product.url %}
+		        {% assign op1_value = "" %}
+		        {% assign op2_value = "" %}
+		        {% assign op3_value = "" %}
+		        {% assign has_variant = false %}
+		        {% assign new_label = "" %}
+		        {% assign sale_label = "" %}
+		        {% assign product_collections = "" %}
+		        {% assign product_available = "In Stock" %}
+		        {% assign short_desc = product.description | strip_html | truncate: 100 %}
+		        {% if product.collections.size > 0 %}
+		        	{% assign _counter = 1 %}
+					{% for collection in product.collections %}
+					    {% assign product_collections = product_collections | append: '<a href="' | append: collection.handle | append: '" title="' | append: collection.title | append: '">' | append: collection.title | append: '</a>' %}
+					    {% unless product.collections.size == _counter %}
+					    	{% assign product_collections = product_collections | append: ','  %}
+					    {%  endunless %}
+					    {% assign _counter = _counter | plus: 1 %}
+					{% endfor %}
+				{% endif %}
+		        {% if product.tags contains "new_label" or product.tags contains "Label_New" or product.tags contains "Label_new" or product.tags contains "label_New" %}
+		        	{% if settings.enable_new_label %}{% assign new_label = _new_label %}{% endif %}
+		        {% endif %}
+		        {% if product.price_min < product.compare_at_price_min and settings.enable_sale_label %}
+		        	 {% assign sale_label = _sale_label %}
+		        {% endif %}
+		        {% if product.options.size > 0 %}
+		        	 {% assign has_variant = true %}
+		        {% endif %}
+		        {% assign has_compare_price = false %}
+		        {% assign thumb_url = product.images[0] | product_img_url: 'large' %}
+		        {% if product.available %}
+		        	{% assign product_price = product.price %}
+			        {% if product.compare_at_price_max > product.price %}
+			        	{% assign product_compare_price = product.compare_at_price %}
+			        	{% assign has_compare_price = true %}
+			        {% else %}
+						{% assign product_compare_price = "" %}
+			        {% endif %}
+		        {% else %}
+		        	{% assign product_available = 'products.product.sold_out' | t %}
+		        {% endif %}
+			    {% if product.options.size > 0 %}
+					{% for variant in product.variants %}
+				        {% assign op1_value_arr = op1_value | split: '[---w3---]' %}
+				        {% assign op2_value_arr = op2_value | split: '[---w3---]' %}
+				        {% assign op3_value_arr = op3_value | split: '[---w3---]' %}
+				        {% if variant.option1 != blank %}
+				        	{%  unless op1_value_arr contains variant.option1 %}
+				        		{% assign op1_value = op1_value | append: variant.option1 | append: '[---w3---]' %}
+				        	{% endunless %}
+				        {% endif %}
+				        {% if variant.option2 != blank %}
+				        	{%  unless op2_value_arr contains variant.option2 %}
+				        		{% assign op2_value = op2_value | append: variant.option2 | append: '[---w3---]' %}
+				        	{% endunless %}
+				        {% endif %}
+				        {% if variant.option3 != blank %}
+				        	{%  unless op3_value_arr contains variant.option1 %}
+				        		{% assign op3_value = op3_value | append: variant.option3 | append: '[---w3---]' %}
+				        	{% endunless %}
+				        {% endif %}
+					{% endfor %}
+				    {% assign op1_value_arr = op1_value | split: '[---w3---]' %}
+				    {% assign op2_value_arr = op2_value | split: '[---w3---]' %}
+				    {% assign op3_value_arr = op3_value | split: '[---w3---]' %}
+				{% endif %}
+		        {
+		        "id":{{product.id}}
+		        ,"title":{{ product.title | json }}
+		        ,"available":{{ product.available | json }}
+		        ,"description":{{ short_desc | json }}
+		        ,"price":{{ product_price | money | json }}
+		        ,"compare_price":{{ product_compare_price | money | json }}
+		        ,"uri":{{ result_url | json }}
+		        ,"handle":{{ product.handle | json }}
+		        ,"featured_image":{{ thumb_url | json }}
+		        ,"tags":{{ product.tags | json }}
+		        ,"vendor":{{ product.vendor | json }}
+		        ,"options":{{ product.options | json }}
+		        ,"option_value":{ "option1":{{ op1_value_arr | json }}, "option2":{{ op2_value_arr | json }}, "option3":{{ op3_value_arr | json }} }
+		        ,"has_compare_price":{{ has_compare_price | json }}
+		        ,"sale_label":{{ sale_label | json }}
+		        ,"new_label":{{ new_label | json }}
+		        ,"has_variant":{{ has_variant | json }}
+		        ,"variants":{{ product.variants | json }}
+		        ,"collections":{{ product.collections | json }}
+		        ,"rating":{{ _product_rate | json }}
+		        ,"out_stock_nofication":{{ 'products.product.sold_out' | t | json }}
+		        }
+{% endcapture %}
+{{ output | strip_newlines }}

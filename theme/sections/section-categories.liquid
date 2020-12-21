@@ -1,0 +1,475 @@
+{%- if section.settings.boxed_layout -%}{%- assign _layout = 'boxed' -%}{%- else -%}{%- assign _layout = 'full' -%}{%- endif -%}
+{%- liquid
+  assign _lazyload          = true
+  assign _items_resp        = section.settings.items_resp | default: '5,3,2'
+  assign _enable_slider     = section.settings.enable_slider
+  assign enable_menu        = section.settings.enable_menu
+  assign menu_btn           = section.settings.menu_btn
+  assign bg_color           = section.settings.bg_color | default: 'rgba(0,0,0,0)'
+  assign bg_full            = section.settings.bg_full
+  assign menu_text_align    = section.settings.menu_text_align
+  assign show_border_bottom = section.settings.show_border_bottom
+  assign block_bg_color     = section.settings.block_bg_color | default: 'rgba(0,0,0,0)'
+-%}
+
+{%- capture section_class -%}
+  home-categories section-{{section.id}} layout-{{_layout}}
+  {% if show_border_bottom %} has-border{%- endif -%}
+{%- endcapture -%}
+{%- assign sectionID = '.section-' | append: section.id -%}
+
+{% if _enable_slider %}{%- capture grid_class -%}{%- render 'set-item-per-row' value: _items_resp -%}{%- endcapture-%}{%- endif -%}
+
+
+{%- capture content -%}
+  <div class="{{section_class | strip_newlines}} style-{{section.settings.style}} "data-section-type="featured-collections"data-section-id="{{section.id}}" {% if bg_full %}style="background-color: {{bg_color}};"{%- endif -%}>
+    {%- if _layout == 'boxed' -%}<div class="container">{%- endif -%}
+      <div class="section_content-wrapper" {% unless bg_full %}style="background-color: {{bg_color}};"{%- endunless -%}>
+        {%- unless section.settings.sectionHeading_text_1 == blank and section.settings.sectionHeading_text_2 == blank -%}
+          <div class="section_content-head">{%- include 'snippet-theme', type: 'sectionHeading' -%}</div>
+        {%- endunless -%}
+
+        <div class="section_content-body">
+          <div class="d-grid{% if _enable_slider %} js-tns slide_ui-element"  data-config="tns-config-{{section.id}}" {%else%}"{% endif %}>
+            {%- if section.blocks.size > 0 -%}
+              {%- for block in section.blocks -%}
+                {%- liquid
+                  assign _collection     = block.settings.collection
+                  assign collection      = collections[_collection]
+                  assign image           = block.settings.image
+                  assign block_menu      = block.settings.menu
+                  assign menu_text_align = block.settings.menu_text_align
+                  assign block_title     = block.settings.title
+                -%}
+                {%- capture block_class -%}card_section-item {{grid_class}} text-{{menu_text_align}}{%- endcapture -%}
+
+                <div class="{{block_class}}"{{block.shopify_attributes}}>
+                  {%- if _collection == blank -%}
+                    {%- include 'svgset', type: 'empty-category' -%}
+                  {%- else -%}
+                    <div class="card_section-item-inner {% unless enable_menu  %}no-menu{%- endunless -%}" test="{{block_menu}}"style="background-color: {{block_bg_color}};">
+                      <div class="card_section-header">
+                        <div class="card_section-figure">
+                          <a href="{{collection.url}}" class="image">
+                            {%- if image != blank -%}
+                              {%- render 'image-style', image: image -%}
+                            {%- else-%}
+                              {%- render 'image-style' image: collection.featured_image -%}
+                            {%- endif -%}
+                          </a>
+                        </div>
+                      </div>
+                      <div class="card_section-body">
+                        <div class="card_section-menu">
+                          <ul class="menu-list">
+                            {%- if block_title != blank -%}
+                              <li class="menu-item title"><span>{{block_title}}</span></li>
+                            {%- else -%}
+                                <li class="menu-item title"><span>{{collection.title}}</span></li>
+                            {%- endif -%}
+                            {%- if enable_menu -%}
+                              {%- for link in linklists[block_menu].links limit: 4 -%}
+                                <li class="menu-item"><a href="{{link.url}}">{{link.title}}</a></li>
+                              {%- endfor -%}
+                            {%- endif -%}
+                          </ul>
+                          {%- if enable_menu -%}
+                            {%- case menu_text_align -%}
+                              {%- when 'left' -%}
+                                {%- assign text_align = 'justify-content-start' -%}
+                              {%- when 'center' -%}
+                                {%- assign text_align = 'justify-content-center' -%}
+                              {%- when 'right' -%}
+                                {%- assign text_align = 'justify-content-end' -%}
+                            {%- endcase -%}
+                            <a href="{{collection.url}}" class="btn-show-all">
+                              <div class="{{text_align}}">
+                                <span>{{menu_btn}}</span>
+                                <span class="svg_emlement-ui">{%- render 'svg' type: 'angle-right' -%}</span>
+                              </div>
+                            </a>
+                          {%- endif -%}
+                        </div>
+                      </div>
+                    </div>
+                  {%- endif -%}
+                </div>
+
+              {%- endfor -%}
+            {%- else -%}
+              {%- for i in (1..5) -%}
+                <div class="card_section-item">
+                  {%- include 'svgset', type: 'empty-category' -%}
+                </div>
+              {%- endfor -%}
+            {%- endif -%}
+          </div>
+
+          {%- if _enable_slider -%}
+            {%- render 'set-item-per-row', value: _items_resp, type: 'slider', section: section, item_class: 'card_section-item' -%}
+          {%- endif -%}
+        </div>
+      </div>
+    {%- if _layout == 'boxed' -%}</div>{%- endif -%}
+  </div>
+
+  {%- capture sectionCss -%}
+    {%- liquid
+      echo section_css
+      render 'snippet-theme', type: 'sectionCSS', ID: sectionID
+      assign _items_resp = _items_resp | replace: ',', ';' | replace: ';', ', 1fr;' | append: ', 1fr'
+      render 'css-resp', classID: sectionID, nextClassID: ' .d-grid', css_value: _items_resp, css_property: 'grid-template-columns', css_value_before: 'repeat', css_split: ';'
+      render 'css-resp', classID: sectionID, nextClassID: ' .d-grid', css_value: section.settings.grid_spc, css_property: 'grid-gap'
+      render 'css-resp', classID: sectionID, nextClassID: ' .card_section-header', css_value: section.settings.collection_image_max_w, css_property: 'max-width'
+    -%}
+  {%- endcapture -%}{%- assign sectionCss = sectionCss | strip_newlines -%}
+  {%- unless sectionCss == blank -%}<style>{{sectionCss}}</style>{%- endunless -%}
+{%- endcapture -%}
+{%- render 'compress', content: content -%}
+<arena class="d-none">{{section.id}}:featured-collections</arena>
+
+{% schema %}
+{
+  "name": {
+    "en": "Categories"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": {
+        "en": "Created by 'Categories' section"
+      }
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": {
+        "en": "Section Label [:id]"
+      },
+      "default": "Categories"
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "General settings"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": {
+        "en": "Boxed layout"
+      },
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": {
+        "en": "Background color"
+      }
+    },
+    {
+      "type" : "checkbox",
+      "id" : "bg_full",
+      "label" : {
+        "en": "Full section background"
+      }
+    },
+    {
+      "type": "text",
+      "id": "section_padding",
+      "label": "Section Padding",
+      "placeholder": {
+        "en": "E.g: 5px 20px 5px 20px"
+      },
+      "info": {
+        "en": "Order: Top Right Bottom Left"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Block item settings"
+      }
+    },
+    {
+      "type": "color",
+      "id": "block_bg_color",
+      "label": {
+        "en": "Background color"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_menu",
+      "label": {
+        "en": "Enable Menu"
+      },
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "menu_btn",
+      "label": {
+        "en": "Button label"
+      },
+      "default": "Show all"
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": {
+        "en": "Style"
+      },
+      "options": [
+        {
+          "value": "1",
+          "label": {
+            "en": "1"
+          }
+        },
+        {
+          "value": "2",
+          "label": {
+            "en": "2"
+          }
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Section Heading"
+      }
+    },
+    {
+      "type" : "checkbox",
+      "id" : "show_border_bottom",
+      "label" : {
+        "en": "Show border bottom"
+      }
+    },
+    {
+      "type": "text",
+      "id": "sectionHeading_text_1",
+      "label": {
+        "en": "Heading"
+      }
+    },
+    {
+      "type": "text",
+      "id": "sectionHeading_text_2",
+      "label": {
+        "en": "Subheading"
+      }
+    },
+    {
+      "type": "select",
+      "id": "sectionHeading_align",
+      "label": {
+        "en": "Alignment"
+      },
+      "options": [
+        {
+          "value": "auto",
+          "label": {
+            "en": "Auto"
+          }
+        },
+        {
+          "value": "left",
+          "label": {
+            "en": "Left"
+          }
+        },
+        {
+          "value": "center",
+          "label": {
+            "en": "Center"
+          }
+        },
+        {
+          "value": "right",
+          "label": {
+            "en": "Right"
+          }
+        }
+      ],
+      "default": "auto"
+    },
+    {
+      "type": "color",
+      "id": "sectionHeading_cl_1",
+      "label": {
+        "en": "Heading color"
+      },
+      "info": {
+        "en": "Blank to inherit"
+      }
+    },
+    {
+      "type": "color",
+      "id": "sectionHeading_cl_2",
+      "label": {
+        "en": "Subheading color"
+      },
+      "info": {
+        "en": "Blank to inherit"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Layout content"
+      }
+    },
+    {
+      "type": "text",
+      "id": "items_resp",
+      "label": {
+        "en": "Max number of items per row"
+      },
+      "default": "5,3,2",
+      "placeholder": {
+        "en": "E.g: 4,3,2"
+      }
+    },
+    {
+      "type": "text",
+      "id": "grid_spc",
+      "label": {
+        "en": "Item spacing"
+      },
+      "placeholder": {
+        "en": "E.g: 10px"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Slider settings"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": {
+        "en": "Enable Slider"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "dots",
+      "label": {
+        "en": "Show dots"
+      },
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "controls",
+      "label": {
+        "en": "Show controls"
+      },
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": {
+        "en": "Autoplay"
+      }
+    },
+    {
+      "type": "text",
+      "id": "autoplay_timeout",
+      "label": {
+        "en": "Auto switch slide (in s)"
+      }
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": {
+        "en": "Collection"
+      },
+      "limit": 7,
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Title"
+          },
+          "info": {
+            "en": "If empty,will take title of collection."
+          }
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": {
+            "en": "Collection"
+          }
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": {
+            "en": "Image"
+          },
+          "info": {
+            "en": "Use  of image collection if blank"
+          }
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": {
+            "en": "Menu"
+          }
+        },
+        {
+          "type": "select",
+          "id": "menu_text_align",
+          "label": {
+            "en": "Menu text align"
+          },
+          "options": [
+            {
+              "value": "left",
+              "label": {
+                "en": "Left"
+              }
+            },
+            {
+              "value": "center",
+              "label": {
+                "en": "Center"
+              }
+            },
+            {
+              "value": "right",
+              "label": {
+                "en": "Right"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": {
+        "en": "Categories"
+      },
+      "category": "Collection",
+      "blocks": []
+    }
+  ]
+}
+{% endschema %}

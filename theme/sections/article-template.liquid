@@ -1,0 +1,252 @@
+{%- liquid
+  assign enable_related_posts = section.settings.enable_related_posts
+  assign blog_handle          = section.settings.blog
+  assign blog_select          = blogs[blog_handle]
+  assign enable_comments      = section.settings.enable_comments
+-%}
+
+<div class="section-article">
+  <div class="section_wrapper">
+    <article class="article-content">
+      <div class="article-content_header">
+        <div class="image">{%- render 'image-style' image: article.image -%}</div>
+      </div>
+      <div class="article-content_body">
+        <div class="title">{{article.title}}</div>
+        {%- assign published_at = article.published_at | date: '%B %d, %Y' -%}
+        <div class="author">
+          {{ 'blogs.articles.author' | t: author: article.author}}
+          <span class="published_at">{{ 'blogs.articles.published_at' | t: date: published_at}}</span>
+          <a href="{{blog.url}}" class="category">{{ 'blogs.articles.category' | t: category: blog.title}}</a>
+        </div>
+        <div class="content">{{article.content}}</div>
+
+        <div class="share-links social-sharing d-flex align-items-center">
+          {{- 'blogs.articles.share' | t -}}:
+          <ul class="list-inline d-flex align-items-center">
+            <li class="social-item">
+              <a target="_blank" rel="noopener" href="//www.facebook.com/sharer.php?u={{ article.url | within: shop }}" title="Facebook">
+                <span class="svg-element-ui">{%- render 'svg', type: 'facebook' -%}</span>
+              </a>
+            </li>
+            <li class="social-item">
+              <a target="_blank" rel="noopener" href="//twitter.com/share?url={{ article.url | within: shop }}&amp;text={{ article.title }}" title="Twitter">
+                <span class="svg-element-ui">{%- render 'svg', type: 'twitter' -%}</span>
+              </a>
+            </li>
+            <li class="social-item">
+              <a target="_blank" rel="noopener" href="//pinterest.com/pin/create/link/?url={{ article.url | within: shop }}" title="Pinterest">
+                <span class="svg-element-ui">{%- render 'svg', type: 'pinterest' -%}</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        {%- if blog.previous_article != nil and blog.next_article != nil -%}
+          {%- assign justify = 'justify-content-between' -%}
+        {%- elsif blog.previous_article == nil-%}
+          {%- assign justify = 'justify-content-end' -%}
+        {%- endif -%}
+        <div class="pagination d-flex {{justify}}">
+          {%- if blog.previous_article -%}
+            <a href="{{blog.previous_article.url}}" class="prev d-flex align-items-center">{%- render 'svg' type: 'angle-left' -%} {{ 'blogs.articles.previous_post' | t}}</a>
+          {%- endif -%}
+          {%- if blog.next_article -%}
+            <a href="{{blog.next_article.url}}" class="next d-flex align-items-center">{{ 'blogs.articles.next_post' | t}} {%- render 'svg' type: 'angle-right' -%}</a>
+          {%- endif -%}
+        </div>
+      </div>
+
+    </article>
+
+    {%- if enable_related_posts -%}
+      <div class="related-posts" id="related_posts" style="position: relative;">
+
+        <div class="section_title-wrapper text-left">
+          <h2 class="section_title-text-1">{{ 'blogs.articles.related_posts' | t}}</h2>
+        </div>
+        <div class="tns-wrapper">
+          <div class="article-list js-tns row" data-config="article_page_related_config">
+            {%- for article in blog_select.articles -%}
+              <div class="article-item col-12 col-sm-6">
+                <div class="article-item__wrapper">
+                  <div class="image">{%- render 'image-style' image: article.image -%}</div>
+                  <div class="info">
+                    <div class="info_header">
+                      <span class="published_at">{{ article.published_at | date: '%B %d, %Y'}}</span>
+                      <span class="category">{{blog_select.title}}</span>
+                    </div>
+                    <div class="info_name">{{article.title}}</div>
+                    <div class="info_content">{{article.excerpt_or_content | truncatewords: 20}}</div>
+                  </div>
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+          <div class="js-tns-controls slider-controls">
+            <a href="#" onclick="return false" class="js-prev-button slider-prev-button">
+              {% render 'svg' type: 'angle-left' %}
+            </a>
+            <a href="#" onclick="return false" class="js-next-button slider-next-button">
+              {% render 'svg' type: 'angle-right' %}
+            </a>
+          </div>
+
+          <script id="article_page_related_config" type="application/json">
+            {
+              "itemClass" : "article-item",
+              "mouseDrag" : true,
+              "angleSwipe" : false,
+              "loop" : false,
+              "controls" : true,
+              "slideBy" : "page",
+              "nav" : false,
+              "responsive" : {
+                "1": {
+                  "gutter" : 15,
+                  "items" : 1
+                },
+                "576" : {
+                  "items" : 2
+                },
+                "768": {
+                  "gutter" : 30,
+                  "items" : 2
+                }
+              }
+            }
+          </script>
+        </div>
+      </div>
+
+    {%- endif -%}
+    {%- if enable_comments and article.comments_enabled? -%}
+      <div class="comment-content" id="comments">
+        <h4 class="comment-content_title">{{ 'blogs.comments.count' | t: count: article.comments_count}}</h4>
+        <div class="comment-content_wrapper">
+        {%- paginate article.comments by 5 -%}
+          {%- for comment in article.comments -%}
+            <div class="comment-item">
+              <div class="avatar">
+                {{ 'avatar-default.png' | asset_img_url | img_tag}}
+              </div>
+              <div class="text">
+                <div class="info">
+                  {%- liquid
+                    assign now_time =  'now' | date: '%s'
+                    assign date_start =  comment.created_at | date: '%s'
+                    assign diffirent_second = now_time | minus: date_start
+                  -%}
+                  {%- if diffirent_second >= 86400  -%}
+                    {%- assign days = diffirent_second | divided_by: 86400 -%}
+                    {%- if days >= 2  -%}
+                      {%- assign created_at = 'blogs.comments.days' | t: count: days -%}
+                    {%- else -%}
+                      {%- assign created_at = 'blogs.comments.day' | t: count: days -%}
+                    {%- endif -%}
+
+                  {%- elsif diffirent_second >= 3600 -%}
+                    {%- assign hours = diffirent_second | divided_by: 3600 -%}
+                    {%- if hours >= 2  -%}
+                      {%- assign created_at = 'blogs.comments.hours' | t: count: hours -%}
+                    {%- else -%}
+                      {%- assign created_at = 'blogs.comments.hour' | t: count: hours -%}
+                    {%- endif -%}
+
+                  {%- elsif diffirent_second >= 60 -%}
+
+                    {%- assign minutes = diffirent_second | divided_by: 60 -%}
+                    {%- if minutes >= 2  -%}
+                      {%- assign created_at = 'blogs.comments.minutes' | t: count: minutes -%}
+                    {%- else -%}
+                      {%- assign created_at = 'blogs.comments.minute' | t: count: minutes -%}
+                    {%- endif -%}
+
+                  {%- else -%}
+                    {%- assign created_at = 'blogs.comments.few_seconds' | t -%}
+                  {%- endif -%}
+                  <span class="name">{{comment.author}}</span> - <span class="published-at">{{created_at}}</span>
+                </div>
+                <p>{{comment.content}}</p>
+              </div>
+
+            </div>
+          {%- endfor -%}
+          {%- include 'pagination', id: "#comments" -%}
+        {%- endpaginate -%}
+        </div>
+      </div>
+      {%- form 'new_comment', article -%}
+        <div class="form-headline">
+          <h4 class="title">{{ 'blogs.comments.title' | t}}</h4>
+          <div class="subtitle">{{ 'blogs.comments.subtitle' | t}}</div>
+        </div>
+        <div class="input-group field-comment">
+          <label for="comment_form_body">{{ 'blogs.comments.comment' | t}}</label>
+          <textarea name="comment[body]" class="w-100" cols="45" rows="8" required></textarea>
+        </div>
+        <div class="d-grid grid-1 grid-sm-2 grid-gap-30 grid-gap-15">
+          <div class="input-group field-name">
+            <label for="comment_form_name">{{ 'blogs.comments.name' | t}}</label>
+            <input type="text" name="comment[author]" id="comment_form_name" required>
+          </div>
+          <div class="input-group field-email">
+            <label for="comment_form_email">{{ 'blogs.comments.email' | t}}</label>
+            <input type="text" name="comment[email]" id="comment_form_email" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-1">{{ 'blogs.comments.submit' | t}}</button>
+      {%- endform -%}
+    {%- endif -%}
+  </div>
+</div>
+
+<script type="text" data-arn-loader="inline" deps='["other-page"]'>
+  let related_posts = document.getElementById("related_posts");
+  !!related_posts && AT.initTNS(related_posts);
+</script>
+
+
+{% schema %}
+{
+  "name": {
+    "en": "Article page"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": {
+        "en": "Related Posts"
+      }
+    },
+    {
+      "type" : "checkbox",
+      "id" : "enable_related_posts",
+      "label" : {
+        "en": "Enable"
+      },
+      "default" : true
+    },
+    {
+      "type" : "blog",
+      "id" : "blog",
+      "label" : "Blog post"
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Comments"
+      }
+    },
+    {
+      "type" : "checkbox",
+      "id" : "enable_comments",
+      "label" : {
+        "en": "Enable Comments"
+      },
+      "default" : true
+    }
+  ]
+}
+{% endschema %}

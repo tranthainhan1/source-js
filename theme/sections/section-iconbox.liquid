@@ -1,0 +1,547 @@
+{%- if section.settings.boxed_layout -%}{%- assign _layout = 'boxed' -%}{%- else -%}{%- assign _layout = 'full' -%}{%- endif -%}
+{%- liquid
+  assign _items_resp      = section.settings.items_resp | default: '3,1' | replace: ',', ';' | replace: ';', ', 1fr;' | append: ', 1fr'
+  assign bg_full          = section.settings.bg_full
+  assign bg_position      = section.settings.bg_position
+  assign bg_size          = section.settings.bg_size
+  assign bg_repeat        = section.settings.bg_repeat
+  assign _main_bg_color   = section.settings.main_bg_color | default: 'rgba(0,0,0,0)'
+  assign _main_text_color = section.settings.main_text_color | default: 'rgba(0,0,0,0)'
+  assign _text_2_color    = section.settings.text_2_color | default: 'rgba(0,0,0,0)'
+
+-%}
+
+{%- capture section_class -%}
+	{{- -}}home-icon-box
+	{{- -}}|section-{{- section.id -}}
+	{{- -}}|layout-{{- _layout -}}
+  {{- -}}|style-{{- _style -}}
+  {%- if section.settings.border -%}|has-border{%- endif -%}
+  {% if bg_full %}{%- render 'bgset' ,class: 'bg-image' ,image: section.settings.section_bg_image -%}{%- endif -%}
+{%- endcapture -%}{%- assign section_class = section_class | strip | split: '|' | join: ' ' -%}
+{%- assign sectionID = '.section-' | append: section.id -%}
+
+{%- capture content -%}
+  <div class="{{section_class}}"data-section-type="iconbox"data-section-id="{{section.id}}">
+    {%- if _layout == 'boxed' -%}<div class="container">{%- endif -%}
+      <div class="section_content-wrapper {%- unless bg_full -%}{%- render 'bgset' image: section.settings.bg_image -%}{%- endunless -%}">
+
+        <div class="section_content-head">{%- include 'snippet-theme', type: 'sectionHeading' -%}</div>
+
+        <div class="section_content-body">
+          <div class="d-grid">
+            {%- if section.blocks.size > 0 -%}
+              {%- for block in section.blocks -%}
+                {%- liquid
+                  assign _image        = block.settings.image
+                  assign _svg          = block.settings.svg
+                  assign _title        = block.settings.title
+                  assign _content      = block.settings.content
+                  assign icon_position = block.settings.icon_position
+                  assign bg_color      = block.settings.bg_color | default: 'rgba(0,0,0,0)'
+                -%}
+
+                <div class="card_section-item vertical-{{icon_position}}"style="background: {{bg_color}}"{{block.shopify_attributes}}>
+                  <div class="card_section-item-inner">
+                    <div class="card_section-header vertical_align-{{icon_position}}">
+                      <div class="card_section-figure">
+                        {%- unless _svg == blank -%}<span class="svg-element-ui">{{ _svg }}</span>
+                        {%- elsif _image != blank -%}{%- render 'image-style', image: _image, originQuality: true -%}
+                        {%- else -%}{%- render 'svgset' -%}
+                        {%- endunless -%}
+                      </div>
+                    </div>
+                    <div class="card_section-body">
+                      <div class="card_section-info">
+                        {%- unless _title == blank -%}<p class="card_section-title">{{_title}}</p>{%- endunless -%}
+                        {%- unless _content == blank -%}<p class="card_section-subtitle">{{_content}}</p>{%- endunless -%}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              {%- endfor -%}
+            {%- else -%}
+              {%- for i in (1..3) -%}
+                <div class="card_section-item">
+                  <div class="card_section-item"{{block.shopify_attributes}}>
+                    <div class="card_section-item-inner">
+                      <div class="card_section-header">
+                        <div class="card_section-figure">
+                          <span class="svg-element-ui">{%- render 'svg', type: 'empty' -%}</span>
+                        </div>
+                      </div>
+                      <div class="card_section-body">
+                        <div class="card_section-info">
+                          <p>Free delivery</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {%- endfor -%}
+            {%- endif -%}
+          </div>
+        </div>
+
+      </div>
+    {%- if _layout == 'boxed' -%}</div>{%- endif -%}
+  </div>
+
+  {%- capture css_values -%}
+    background-size: {{bg_size}};
+    background-position: {{bg_position}};
+    background-repeat: {{bg_repeat}};
+    background-color: {{_main_bg_color}};
+  {%- endcapture -%}
+
+  {%- capture sectionCss -%}
+    {%- liquid
+      echo section_css
+      render 'snippet-theme', type: 'sectionCSS', ID: sectionID, no_padding: true
+      render 'css-resp', classID: sectionID, nextClassID: ' .d-grid', css_value: _items_resp, css_property: 'grid-template-columns', css_value_before: 'repeat', css_split: ';'
+      render 'css-resp', classID: sectionID, nextClassID: ' .d-grid', css_value: section.settings.grid_spc, css_property: 'grid-gap'
+    -%}
+    {%- case bg_full -%}
+      {%- when true -%}
+        {%- render 'css-resp' preClassID: sectionID, css_values: css_values -%}
+        {%- render 'css-resp' preClassID: sectionID, css_value: section.settings.section_padding -%}
+      {%- when false -%}
+        {%- render 'css-resp' preClassID: sectionID, classID: ' .section_content-wrapper', css_values: css_values -%}
+        {%- render 'css-resp' preClassID: sectionID, classID: ' .section_content-wrapper', css_value: section.settings.section_padding -%}
+    {%- endcase -%}
+
+    {%- unless _main_text_color == 'rgba(0,0,0,0)' -%}
+      {{- sectionID }} .card_section-info p{color: {{_main_text_color}};}
+    {%- endunless -%}
+    {%- unless _text_2_color == 'rgba(0,0,0,0)' -%}
+      {{- sectionID }} .card_section-info .card_section-subtitle{color: {{_text_2_color}};}
+    {%- endunless -%}
+
+
+  {%- endcapture -%}{%- assign sectionCss = sectionCss | strip_newlines -%}
+  {%- unless sectionCss == blank -%}<style>{{sectionCss}}</style>{%- endunless -%}
+{%- endcapture -%}
+
+{%- render 'compress', content: content -%}
+<arena class="d-none">{{section.id}}</arena>
+
+
+{% schema %}
+{
+  "name": {
+    "en": "Icon box"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": {
+        "en": "Created by 'Icon box' section"
+      }
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": {
+        "en": "Section Label [:id]"
+      },
+      "default": "Icon box"
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "LAYOUT"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": {
+        "en": "Boxed layout"
+      },
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "border",
+      "label": {
+        "en": "Border"
+      },
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "section_padding",
+      "label": {
+        "en": "Section Padding"
+      },
+      "placeholder": {
+        "en": "E.g: 5px 20px 5px 20px"
+      },
+      "info": {
+        "en": "Order: Top Right Bottom Left"
+      }
+    },
+    {
+      "type": "color",
+      "id": "main_bg_color",
+      "label": {
+        "en": "Background color"
+      }
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": {
+        "en": "Background image"
+      }
+    },
+    {
+      "type": "select",
+      "id": "bg_size",
+      "label": {
+        "en": "Background size"
+      },
+      "options": [
+        {
+          "value": "auto",
+          "label": {
+            "en": "Auto"
+          }
+        },
+        {
+          "value": "cover",
+          "label": {
+            "en": "Cover"
+          }
+        },
+        {
+          "value": "contain",
+          "label": {
+            "en": "Contain"
+          }
+        }
+      ],
+      "default": "auto"
+    },
+    {
+      "type": "select",
+      "id": "bg_repeat",
+      "label": {
+        "en": "Background repeat"
+      },
+      "options": [
+        {
+          "value": "no-repeat",
+          "label": {
+            "en": "No repeat"
+          }
+        },
+        {
+          "value": "repeat",
+          "label": {
+            "en": "Repeat"
+          }
+        },
+        {
+          "value": "repeat-x",
+          "label": {
+            "en": "Repeat X"
+          }
+        },
+        {
+          "value": "repeat-y",
+          "label": {
+            "en": "Repeat Y"
+          }
+        }
+      ],
+      "default": "no-repeat"
+    },
+    {
+      "type": "select",
+      "id": "bg_position",
+      "label": {
+        "en": "Background position"
+      },
+      "options": [
+        {
+          "value": "left top",
+          "label": {
+            "en": "Left Top"
+          }
+        },
+        {
+          "value": "left center",
+          "label": {
+            "en": "Left Center"
+          }
+        },
+        {
+          "value": "left bottom",
+          "label": {
+            "en": "Left Bottom"
+          }
+        },
+        {
+          "value": "right top",
+          "label": {
+            "en": "Right Top"
+          }
+        },
+        {
+          "value": "right center",
+          "label": {
+            "en": "Right Center"
+          }
+        },
+        {
+          "value": "right bottom",
+          "label": {
+            "en": "Right Bottom"
+          }
+        },
+        {
+          "value": "center top",
+          "label": {
+            "en": "Center Top"
+          }
+        },
+        {
+          "value": "center center",
+          "label": {
+            "en": "Center Center"
+          }
+        },
+        {
+          "value": "center bottom",
+          "label": {
+            "en": "Center Bottom"
+          }
+        }
+      ],
+      "default" : "center center"
+    },
+    {
+      "type": "checkbox",
+      "id": "bg_full",
+      "label": {
+        "en": "Full section background"
+      },
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "main_text_color",
+      "label": {
+        "en": "Text 1 color"
+      }
+    },
+    {
+      "type": "color",
+      "id": "text_2_color",
+      "label": {
+        "en": "Text 2 color"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Section Heading"
+      }
+    },
+    {
+      "type": "text",
+      "id": "sectionHeading_text_1",
+      "label": {
+        "en": "Heading"
+      }
+    },
+    {
+      "type": "text",
+      "id": "sectionHeading_text_2",
+      "label": {
+        "en": "Subheading"
+      }
+    },
+    {
+      "type": "select",
+      "id": "sectionHeading_align",
+      "label": {
+        "en": "Alignment"
+      },
+      "options": [
+        {
+          "value": "auto",
+          "label": {
+            "en": "Auto"
+          }
+        },
+        {
+          "value": "left",
+          "label": {
+            "en": "Left"
+          }
+        },
+        {
+          "value": "center",
+          "label": {
+            "en": "Center"
+          }
+        },
+        {
+          "value": "right",
+          "label": {
+            "en": "Right"
+          }
+        }
+      ],
+      "default": "auto"
+    },
+    {
+      "type": "color",
+      "id": "sectionHeading_cl_1",
+      "label": {
+        "en": "Heading color"
+      },
+      "info": {
+        "en": "Blank to inherit"
+      }
+    },
+    {
+      "type": "color",
+      "id": "sectionHeading_cl_2",
+      "label": {
+        "en": "Subheading color"
+      },
+      "info": {
+        "en": "Blank to inherit"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Layout content"
+      }
+    },
+    {
+      "type": "text",
+      "id": "items_resp",
+      "label": {
+        "en": "Max number of items per row"
+      },
+      "default": "4,1",
+      "placeholder": {
+        "en": "E.g: 4,3,2"
+      },
+      "info": {
+        "en": "E.g: 4,3,2"
+      }
+    },
+    {
+      "type": "text",
+      "id": "grid_spc",
+      "label": {
+        "en": "Item spacing"
+      },
+      "default": "10px",
+      "placeholder": {
+        "en": "E.g: 10px"
+      },
+      "info": {
+        "en": "E.g: 10px"
+      }
+    }
+  ],
+  "blocks": [
+    {
+      "type": "content",
+      "name": {
+        "en": "Content"
+      },
+      "limit": 4,
+      "settings": [
+        {
+          "type": "color",
+          "id": "bg_color",
+          "label": {
+            "en": "Background color"
+          }
+        },
+        {
+          "type": "text",
+          "id": "svg",
+          "label": {
+            "en": "SVG"
+          }
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": {
+            "en": "Image"
+          }
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Title"
+          }
+        },
+        {
+          "type": "select",
+          "id": "icon_position",
+          "label": {
+            "en": "Icon position"
+          },
+          "options": [
+            {
+              "value": "auto",
+              "label": {
+                "en": "Auto"
+              }
+            },
+            {
+              "value": "top",
+              "label": {
+                "en": "Top"
+              }
+            },
+            {
+              "value": "middle",
+              "label": {
+                "en": "Middle"
+              }
+            },
+            {
+              "value": "bottom",
+              "label": {
+                "en": "Bottom"
+              }
+            }
+          ],
+          "default" : "auto"
+        },
+        {
+          "type": "textarea",
+          "id": "content",
+          "label": {
+            "en": "Content"
+          }
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": {
+        "en": "Icon box"
+      },
+      "category": "Banner",
+      "blocks": []
+    }
+  ]
+}
+{% endschema %}

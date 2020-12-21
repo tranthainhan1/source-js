@@ -1,0 +1,319 @@
+{%- if section.settings.boxed_layout -%}{%- assign _layout = 'boxed' -%}{%- else -%}{%- assign _layout = 'full' -%}{%- endif -%}
+{%- liquid
+  assign sectionType    = 'featured-slide'
+  assign _lazyload      = true
+  assign _total 		    = section.settings.total | times: 1
+  assign _items_resp    = section.settings.items_resp | default: '5,3,2' | replace: ',', ';' | replace: ';', ', 1fr;' | append: ', 1fr'
+  assign _enable_slider = section.settings.enable_slider
+-%}
+
+{%- capture section_class -%}
+	{{- -}}home-menulist
+	{{- -}}|section-{{- section.id -}}
+	{{- -}}|layout-{{- _layout -}}
+  {{- -}}|mobile_layout-{{- section.settings.mobile_layout -}}
+  {%- render 'bgset' ,class: 'bg-image' ,image: section.settings.section_bg_image -%}
+{%- endcapture -%}{%- assign section_class = section_class | strip | split: '|' | join: ' ' -%}
+{%- assign sectionID = '.section-' | append: section.id -%}
+
+{%- capture gridClass -%}{%- render 'set-item-per-row', value: section.settings.items_resp -%}{%- endcapture -%}
+
+{%- capture content -%}
+<div class="{{section_class}}" data-section-type="{{sectionType}}" data-section-id="{{section.id}}">
+  {%- if _layout == 'boxed' -%}<div class="container">{%- endif -%}
+  	<div class="section_content-wrapper">
+      <div class="section_content-head">
+        {%- include 'snippet-theme', type: 'sectionHeading' -%}
+      </div>
+
+  		<div class="section_content-body">
+        <div class="section-content-wrapper d-grid{% if _enable_slider %} slide_ui-element{% endif %}">
+          {%- if section.blocks.size > 0 -%}
+            {%- for block in section.blocks -%}
+              {%- liquid
+                assign __menu       = block.settings.menu
+                assign __menuList   = linklists[__menu]
+                assign __menuTitle  = block.settings.heading | default: __menuList.title
+              -%}
+
+              {%- if __menu != blank and __menuList.links.size > 0 -%}
+                <div class="menu_list-ui"{{block.shopify_attributes}}>
+                  <div class="menu_list-header">
+                    <p>{{ __menuTitle }}</p>
+                  </div>
+                  <div class="menu_list-body">
+                    <ul class="menu_list-wrapper">
+                      {%- for l in __menuList.links -%}
+                        {%- render 'nav-link', l: l, class: 'menu_list-item' -%}
+                      {%- endfor -%}
+                    </ul>
+                  </div>
+                </div>
+
+              {%- else -%}
+                  {%- render 'svgset', type: 'empty-menu' -%}
+              {%- endif -%}
+            {%- endfor -%}
+
+          {%- else -%}
+            {%- liquid
+              for i in (1..6)
+                render 'svgset', type: 'empty-menu'
+              endfor
+            -%}
+          {%- endif -%}
+
+        </div>
+        {%- if _enable_slider -%}
+          {%- render 'set-item-per-row', value: section.settings.items_resp, type: 'slider', itemClass: '', gutter: section.settings.grid_spc -%}
+        {%- endif -%}
+  		</div>
+  	</div>
+  {%- if _layout == 'boxed' -%}</div>{%- endif -%}
+</div>
+
+{%- capture sectionCss -%}
+  {%- liquid
+    echo section_css
+    assign gridClass = ' .section-content-wrapper.d-grid'
+    render 'css-resp', classID: sectionID, nextClassID: ' .d-grid', css_value: _items_resp, css_property: 'grid-template-columns', css_value_before: 'repeat', css_split: ';'
+    render 'css-resp', classID: sectionID, nextClassID: ' .d-grid', css_value: section.settings.grid_spc, css_property: 'grid-gap'
+    render 'snippet-theme', type: 'sectionCSS', ID: sectionID
+  -%}
+{%- endcapture -%}{%- assign sectionCss = sectionCss | strip_newlines -%}
+{%- unless sectionCss == blank -%}<style>{{sectionCss}}</style>{%- endunless -%}
+{%- endcapture -%}
+{%- render 'compress', content: content -%}
+
+{% schema %}
+{
+  "name": {
+    "en": "Menu List"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": {
+        "en": "Created by 'Menu List' section"
+      }
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": {
+        "en": "Section Label [:id]"
+      },
+      "default": "Menu List"
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "LAYOUT"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "boxed_layout",
+      "label": {
+        "en": "Boxed layout"
+      },
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "section_padding",
+      "label": "Section Padding",
+      "placeholder": {
+        "en": "E.g: 5px 20px 5px 20px"
+      },
+      "info": {
+        "en": "Order: Top Right Bottom Left"
+      }
+    },
+    {
+      "type": "select",
+      "id": "mobile_layout",
+      "label": {
+        "en": "Mobile layout"
+      },
+      "options": [
+        {
+          "value": "boxed",
+          "label": {
+            "en": "Boxed"
+          }
+        },
+        {
+          "value": "full",
+          "label": {
+            "en": "Wide"
+          }
+        },
+        {
+          "value": "full-right",
+          "label": {
+            "en": "Only full right"
+          }
+        }
+      ],
+      "default": "boxed",
+      "info": {
+        "en": "Only full right use for slider"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Layout content"
+      }
+    },
+    {
+      "type": "text",
+      "id": "items_resp",
+      "label": {
+        "en": "Max number of items per row"
+      },
+      "default": "6,3,2",
+      "placeholder": {
+        "en": "E.g: 4,3,2"
+      }
+    },
+    {
+      "type": "text",
+      "id": "grid_spc",
+      "label": {
+        "en": "Item spacing"
+      },
+      "default": "8px",
+      "placeholder": {
+        "en": "E.g: 10px"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Slider settings"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": {
+        "en": "Enable Slider"
+      }
+    },
+    {
+      "type": "header",
+      "content": {
+        "en": "Section Heading"
+      }
+    },
+    {
+      "type": "text",
+      "id": "sectionHeading_text_1",
+      "label": {
+        "en": "Heading"
+      }
+    },
+    {
+      "type": "text",
+      "id": "sectionHeading_text_2",
+      "label": {
+        "en": "Subheading"
+      }
+    },
+    {
+      "type": "select",
+      "id": "sectionHeading_align",
+      "label": {
+        "en": "Alignment"
+      },
+      "options": [
+        {
+          "value": "auto",
+          "label": {
+            "en": "Auto"
+          }
+        },
+        {
+          "value": "left",
+          "label": {
+            "en": "Left"
+          }
+        },
+        {
+          "value": "center",
+          "label": {
+            "en": "Center"
+          }
+        },
+        {
+          "value": "right",
+          "label": {
+            "en": "Right"
+          }
+        }
+      ],
+      "default": "auto"
+    },
+    {
+      "type": "color",
+      "id": "sectionHeading_cl_1",
+      "label": {
+        "en": "Heading color"
+      },
+      "info": {
+        "en": "Blank to inherit"
+      }
+    },
+    {
+      "type": "color",
+      "id": "sectionHeading_cl_2",
+      "label": {
+        "en": "Subheading color"
+      },
+      "info": {
+        "en": "Blank to inherit"
+      }
+    }
+  ],
+  "blocks": [
+    {
+      "type": "content",
+      "name": {
+        "en": "Menu item"
+      },
+      "limit": 6,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": {
+            "en": "Heading"
+          },
+          "info": {
+            "en": "Default is Menu title"
+          }
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": {
+            "en": "Menu item"
+          }
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": {
+        "en": "Menu List"
+      },
+      "category": "Advanced layout",
+      "blocks": []
+    }
+  ]
+}
+{% endschema %}

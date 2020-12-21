@@ -1,0 +1,453 @@
+{%- liquid
+  assign color_default = 'rgba(0,0,0,0)'
+  assign layout  =  section.settings.layout
+  assign sectionID = '.section-' | append: section.id
+
+  assign bg_color = section.settings.bg_color | default: color_default
+  assign section_padding = section.settings.section_padding
+  assign section_items_spc = section.settings.items_spc
+-%}
+
+{%- capture section_class -%}
+  {{--}}home-blog-v2 {{sectionID | remove: '.' -}}
+  {{--}}|{%- if layout -%}layout-boxed{%- else -%}layout-full{%- endif -%}
+  {{--}}{%- if bg_color != color_default -%}|"style="background-color: {{bg_color}}; {%- endif -%}
+{%- endcapture -%}
+<div class="{{section_class | split: '|' | join: ' '}}" data-section-type="blog-v2" data-section-id="{{section.id}}">
+  {%- if layout -%} <div class="container"> {%- endif -%}
+    <div class="section-wrapper">
+      <div class="d-grid section-content">
+        {%- for block in section.blocks -%}
+            {%- liquid
+              assign blockID      = ' .block-' | append: block.id
+              assign blog_handle  = block.settings.blog_posts
+              assign blog_posts   = blogs[blog_handle]
+              assign block_title  = block.settings.title
+              assign block_style  = block.settings.style
+              assign items_spc    = block.settings.items_spc
+              assign enable_video = block.settings.enable_video
+              assign video_type   = block.settings.video_type
+              assign video_url    = block.settings.video_url
+              assign video_embed  = block.settings.video_embed
+              case block_style
+                when '1'
+                  if enable_video
+                    assign limit = 2
+                  else
+                    assign limit = 3
+                  endif
+                when '2'
+                  if enable_video
+                    assign limit = 4
+                  else
+                    assign limit = 5
+                  endif
+              endcase
+            -%}
+          {%- case block_style -%}
+            {%- when '1' -%}
+              <div class="blog-posts style-{{block_style}} {{blockID | remove: '.'}}"{{block.shopify_attributes}}>
+
+                <div class="blog-posts_title section_title-wrapper">
+                  <h3 class="section_title-text-1">{{block_title}}</h3>
+                </div>
+
+                <div class="blog-posts_content d-grid" test="{{enable_video}}">
+                  {%- if enable_video -%}
+                    {%- case video_type -%}
+                      {%- when 'default' -%}
+                        <article class="first-article">
+                          <div class="video-url" style="position: relative; padding-top: 55%">
+                            <video controls muted playsinline  style="position:absolute;width:100%;height:100%;left:0;right:0;bottom:0;">
+                              <source src="{{video_url}}" type="video/mp4">
+                            </video>
+                          </div>
+                        </article>
+
+                      {%- when 'embed' -%}
+
+                        <article class="first-article">
+                          <div class="video-embed" style="position: relative; padding-top: 55%">
+                            {{video_embed | replace_first: '<iframe', '<iframe style="position: absolute;width: 100%;height: 100%;left:0;right:0;bottom: 0;"'}}
+                          </div>
+                        </article>
+
+                    {%- endcase -%}
+
+                    {%- for article in blog_posts.articles limit: limit -%}
+                      <article class="article">
+                        <a href="{{article.url}}" class="image">
+                          {%- render 'image-style' image: article.image -%}
+                        </a>
+                        <div class="content">
+                          <div class="article_published-at">
+                            <span>{{article.published_at | date: "%B %d, %Y" }}</span>
+                            <span class="author">{{ 'section.blog_posts_v2.by_author' | t: author: article.author}}</span>
+                          </div>
+                          <div class="article_title">
+                            <h3><a href="{{article.url}}">{{article.title}}</a></h3>
+                          </div>
+                          {%- if article.excerpt_or_content != blank -%}
+                            <div class="article_short-desc">
+                              {{article.excerpt_or_content | truncatewords: 20}}
+                            </div>
+                          {%- endif -%}
+                        </div>
+                      </article>
+                    {%- endfor -%}
+                  {%- else -%}
+                    {%- for article in blog_posts.articles limit: limit -%}
+                      {%- if forloop.first -%}
+                        <article class="first-article">
+                          <a href="{{article.url}}" class="image">
+                            {%- render 'image-style' image: article.image, imagePadding: '55%' -%}
+                          </a>
+                          <div class="content overlay-ui">
+                            <div class="article_published-at">
+                              <span>{{article.published_at | date: "%B %d, %Y" }}</span>
+                              <span class="author">{{ 'section.blog_posts_v2.by_author' | t: author: article.author}}</span>
+                            </div>
+                            <div class="article_title">
+                              <h3><a href="{{article.url}}">{{article.title}}</a></h3>
+                            </div>
+                            {%- if article.excerpt_or_content != blank -%}
+                              <div class="article_short-desc">
+                                {{article.excerpt_or_content | truncatewords: 20}}
+                              </div>
+                            {%- endif -%}
+                          </div>
+                        </article>
+                      {%- else -%}
+                        <article class="article">
+                          <a href="{{article.url}}" class="image">
+                            {%- render 'image-style' image: article.image -%}
+                          </a>
+                          <div class="content">
+                            <div class="article_published-at">
+                              <span>{{article.published_at | date: "%B %d, %Y" }}</span>
+                              <span class="author">{{ 'section.blog_posts_v2.by_author' | t: author: article.author}}</span>
+                            </div>
+                            <div class="article_title">
+                              <h3><a href="{{article.url}}">{{article.title}}</a></h3>
+                            </div>
+                            {%- if article.excerpt_or_content != blank -%}
+                              <div class="article_short-desc">
+                                {{article.excerpt_or_content | truncatewords: 20}}
+                              </div>
+                            {%- endif -%}
+                          </div>
+                        </article>
+                      {%- endif -%}
+                    {%- endfor -%}
+                  {%- endif -%}
+
+                </div>
+
+              </div>
+
+              {%- capture block_css -%}
+                {%- render 'css-resp' preClassID: sectionID, classID: blockID, nextClassID: ' .d-grid' , css_value: items_spc, css_property: 'grid-gap'  -%}
+                {%- render 'css-resp' preClassID: sectionID, classID: blockID, nextClassID: ' .d-grid' , css_value: "100%", css_property: 'grid-template-columns'  -%}
+              {%- endcapture -%}
+              {%- assign section_css = section_css | append: block_css -%}
+            {% comment %} end {% endcomment %}
+
+            {%- when '2' -%}
+              {%- capture article_first -%}{%- endcapture-%}
+              {%- capture rest_article -%}{%- endcapture-%}
+
+              {%- if enable_video -%}
+                {%- capture content -%}
+                  {%- case video_type -%}
+                    {%- when 'default' -%}
+                      <article class="first-article">
+                        <div class="video-url" style="position: relative; padding-top: 55%">
+                          <video controls muted playsinline style="position:absolute;width:100%;height:100%;left:0;right:0;bottom:0;">
+                            <source src="{{video_url}}" type="video/mp4">
+                          </video>
+                        </div>
+                      </article>
+
+                    {%- when 'embed' -%}
+
+                      <article class="first-article">
+                        <div class="video-embed" style="position: relative; padding-top: 55%">
+                          {{video_embed | replace_first: '<iframe', '<iframe style="position: absolute;width: 100%;height: 100%;left:0;right:0;bottom: 0;"'}}
+                        </div>
+                      </article>
+
+                  {%- endcase -%}
+                {%- endcapture -%}
+                {%- assign article_first = article_first | append: content -%}
+
+                {%- for article in blog_posts.articles limit: limit -%}
+                  {%- capture content -%}
+                    <article class="article">
+                      <a href="{{article.url}}" class="image">
+                        {%- render 'image-style' image: article.image, imagePadding: '62.5%' -%}
+                      </a>
+                      <div class="content overlay-ui">
+                        <div class="article_published-at">
+                          <span>{{article.published_at | date: "%B %d, %Y" }}</span>
+                          <span class="author">{{ 'section.blog_posts_v2.by_author' | t: author: article.author}}</span>
+                        </div>
+                        <div class="article_title">
+                          <h3><a href="{{article.url}}">{{article.title}}</a></h3>
+                        </div>
+                      </div>
+                    </article>
+                  {%- endcapture -%}
+                  {%- assign rest_article = rest_article | append: content -%}
+
+                {%- endfor -%}
+
+              {%- else -%}
+                {%- for article in blog_posts.articles limit: limit -%}
+                  {%- if forloop.first -%}
+
+                    {%- capture content -%}
+                      <article class="first-article">
+                        <a href="{{article.url}}" class="image">
+                          {%- render 'image-style' image: article.image, imagePadding: '55%' -%}
+                        </a>
+                        <div class="content overlay-ui">
+                          <div class="article_published-at">
+                            <span>{{article.published_at | date: "%B %d, %Y" }}</span>
+                            <span class="author">{{ 'section.blog_posts_v2.by_author' | t: author: article.author}}</span>
+                          </div>
+                          <div class="article_title">
+                            <h3><a href="{{article.url}}">{{article.title}}</a></h3>
+                          </div>
+                          {%- if article.excerpt_or_content != blank -%}
+                            <div class="article_short-desc">
+                              {{article.excerpt_or_content | truncatewords: 20}}
+                            </div>
+                          {%- endif -%}
+                        </div>
+                      </article>
+                    {%- endcapture -%}
+
+                    {%- assign article_first = article_first | append: content -%}
+                  {%- else -%}
+
+                    {%- capture content -%}
+                      <article class="article">
+                        <a href="{{article.url}}" class="image">
+                          {%- render 'image-style' image: article.image, imagePadding: '62.5%' -%}
+                        </a>
+                        <div class="content overlay-ui">
+                          <div class="article_published-at">
+                            <span>{{article.published_at | date: "%B %d, %Y" }}</span>
+                            <span class="author">{{ 'section.blog_posts_v2.by_author' | t: author: article.author}}</span>
+                          </div>
+                          <div class="article_title">
+                            <h3><a href="{{article.url}}">{{article.title}}</a></h3>
+                          </div>
+                        </div>
+                      </article>
+                    {%- endcapture -%}
+
+                    {%- assign rest_article = rest_article | append: content -%}
+                  {%- endif -%}
+
+                {%- endfor -%}
+              {%- endif -%}
+
+
+              <div class="blog-posts style-{{block_style}} {{blockID | remove: '.'}}" test="{{blog_posts.articles_count}}" {{block.shopify_attributes}}>
+                <div class="blog-posts_title section_title-wrapper">
+                  <h3 class="section_title-text-1">{{block_title}}</h3>
+                </div>
+
+                <div class="blog-posts_content d-grid">
+                  <div class="blog-posts_content_top">
+                    {{article_first}}
+                  </div>
+                  <div class="blog-posts_content_bottom d-grid">
+                    {{rest_article}}
+                  </div>
+                </div>
+
+              </div>
+
+              {%- capture block_css -%}
+                {%- render 'css-resp' preClassID: sectionID, classID: blockID, nextClassID: ' .d-grid' , css_value: items_spc, css_property: 'grid-gap'  -%}
+                {%- render 'css-resp' preClassID: sectionID, classID: blockID, nextClassID: ' .d-grid' , css_value: "100%", css_property: 'grid-template-columns'  -%}
+                {%- render 'css-resp' preClassID: sectionID, classID: blockID, nextClassID: ' .blog-posts_content_bottom' , css_value: items_spc, css_property: 'grid-gap'  -%}
+                {%- render 'css-resp' preClassID: sectionID, classID: blockID, nextClassID: ' .blog-posts_content_bottom' , css_value: "50% 50%,100%,100%", css_property: 'grid-template-columns'  -%}
+              {%- endcapture -%}
+              {%- assign section_css = section_css | append: block_css -%}
+            {% comment %} end {% endcomment %}
+
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  {%- if layout -%} </div> {%- endif -%}
+</div>
+
+{%- capture sectionCss -%}
+  {{section_css}}
+  {%- render 'css-resp' preClassID: sectionID , css_value: section_padding, css_property: 'padding'  -%}
+  {%- render 'css-resp' preClassID: sectionID, classID: ' .section-wrapper >.d-grid' , css_value: "50% 50%, 50% 50%, 100%", css_property: 'grid-template-columns'  -%}
+  {%- render 'css-resp' preClassID: sectionID, classID: ' .section-wrapper >.d-grid' , css_value: section_items_spc, css_property: 'grid-gap'  -%}
+{%- endcapture -%}
+
+<style>
+{{-sectionCss-}}
+</style>
+<arena class="d-none">{{section.id}}</arena>
+
+
+{%- schema -%}
+{
+  "name": {
+    "en": "Blog posts v2"
+  },
+  "tag": "section",
+  "settings": [
+    {
+      "type": "header",
+      "content": {
+        "en": "Layout"
+      }
+    },
+    {
+      "type": "checkbox",
+      "id": "layout",
+      "label": {
+        "en": "Boxed layout"
+      },
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": {
+        "en": "Background color"
+      }
+    },
+    {
+      "type": "text",
+      "id": "section_padding",
+      "label": {
+        "en": "Section padding"
+      },
+      "info": {
+        "en": "E.g: 20px 10px 0px 5px. Order: Top Right Bottom Left"
+      }
+    },
+    {
+      "type": "text",
+      "id": "items_spc",
+      "label": {
+        "en": "Spacing between 'Blog posts'"
+      },
+      "default": "10px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "blog-post",
+      "name": {
+        "en": "Blog posts"
+      },
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": {
+            "en": "Title"
+          }
+        },
+        {
+          "type": "blog",
+          "id": "blog_posts",
+          "label": "Blog posts"
+        },
+        {
+          "type": "select",
+          "id": "style",
+          "label": {
+            "en": "Style"
+          },
+          "options": [
+            {
+              "value": "1",
+              "label": {
+                "en": "1"
+              }
+            },
+            {
+              "value": "2",
+              "label": {
+                "en": "2"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "items_spc",
+          "label": {
+            "en": "Spacing between items"
+          },
+          "info": {
+            "en": "E.g: 10px"
+          },
+          "default": "10px"
+        },
+        {
+          "type" : "checkbox",
+          "id" : "enable_video",
+          "label" : {
+            "en": "Enable video"
+          }
+        },
+        {
+          "type": "select",
+          "id": "video_type",
+          "label" : {
+            "en" : "Video type"
+          },
+          "options": [
+           {
+              "value": "default",
+              "label": {
+                "en": "Default"
+              }
+           },
+           {
+             "value": "embed",
+             "label": {
+               "en": "Embed"
+             }
+           }
+          ]
+        },
+        {
+          "id": "video_url",
+          "type": "text",
+          "label": "Video URL",
+          "info": {
+            "en": "To add a video. Please go to Settings > Files > Upload Files. After uploaded, copy the URL and paste it here."
+          }
+        },
+        {
+          "type": "html",
+          "id": "video_embed",
+          "label": {
+            "en": "Video embed"
+          }
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Blog posts v2",
+      "category": "Blog"
+    }
+  ]
+}
+{%- endschema -%}
