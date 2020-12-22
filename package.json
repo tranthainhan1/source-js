@@ -27,6 +27,7 @@
   "dependencies": {
     "@shopify/theme-images": "^4.0.2",
     "@shopify/theme-sections": "^4.0.2",
+    "lazysizes": "^5.3.0-beta1",
     "mustache": "^4.1.0",
     "tiny-slider": "^2.9.3"
   }
