@@ -17,6 +17,7 @@ const port = argv.port || 9000;
 const shopifyHost = "";
 const password = "";
 const themeID = "";
+const storePassword = "";
 const proxy = `${shopifyHost}?preview_id=${themeID}`;
 
 const debounce = (func, wait) => {
@@ -36,6 +37,7 @@ async function buildScripts(filePath) {
     console.log(`${path.basename(filePath)} does not exist.`);
     return;
   }
+  console.log(path.resolve(__dirname, filePath));
 
   webpack(
     {
@@ -112,6 +114,18 @@ async function startServer() {
       rule: {
         match: /<\/body>/i,
         fn: function (snippet, match) {
+          if (!!storePassword) {
+            let myScript = `
+            <script>
+              if(window.location.href.includes('password')){
+                let input = document.getElementById('password');
+                input.value = "${storePassword}";
+                input.closest('form').submit();
+              }
+            </script>
+            `;
+            snippet += myScript;
+          }
           return snippet + match;
         },
       },
