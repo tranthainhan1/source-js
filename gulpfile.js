@@ -112,13 +112,20 @@ async function startServer() {
       rule: {
         match: /<\/body>/i,
         fn: function (snippet, match) {
+          snippet += `<script type="application/javascript">
+                        if(location.href.includes('password')){
+                          let input =  document.querySelector('input[type="password"]')
+                          input.value = "${password}";
+                          input.closest('form').submit();
+                        }
+                      </script>`;
           return snippet + match;
         },
       },
     },
   });
 
-  watch("./app/scripts/.common/*.js").on("change", scriptTask);
+  watch("./app/scripts/common/**/*.js").on("change", scriptTask);
   watch("./app/scripts/*.js").on("change", buildScripts);
   watch("./app/scripts/*.js").on("unlink", removeScript);
   watch(".tmp/theme.update").on("change", debounce(browserSync.reload, 1500));

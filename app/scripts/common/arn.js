@@ -1,63 +1,6 @@
-import { tns } from "tiny-slider/src/tiny-slider";
 import { getSizedImageUrl } from "@shopify/theme-images";
 let AT = {
   eventContainers: {},
-  currency: (function () {
-    var moneyFormat = "${{amount}}";
-
-    function formatMoney(cents, format) {
-      if (typeof cents === "string") {
-        cents = cents.replace(".", "");
-      }
-      var value = "";
-      var placeholderRegex = /\{\{\s*(\w+)\s*\}\}/;
-      var formatString = format || moneyFormat;
-
-      function formatWithDelimiters(number, precision, thousands, decimal) {
-        thousands = thousands || ",";
-        decimal = decimal || ".";
-
-        if (isNaN(number) || number === null) {
-          return 0;
-        }
-
-        number = (number / 100.0).toFixed(precision);
-
-        var parts = number.split(".");
-        var dollarsAmount = parts[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1" + thousands);
-        var centsAmount = parts[1] ? decimal + parts[1] : "";
-
-        return dollarsAmount + centsAmount;
-      }
-
-      switch (formatString.match(placeholderRegex)[1]) {
-        case "amount":
-          value = formatWithDelimiters(cents, 2);
-          break;
-        case "amount_no_decimals":
-          value = formatWithDelimiters(cents, 0);
-          break;
-        case "amount_with_comma_separator":
-          value = formatWithDelimiters(cents, 2, ".", ",");
-          break;
-        case "amount_no_decimals_with_comma_separator":
-          value = formatWithDelimiters(cents, 0, ".", ",");
-          break;
-        case "amount_no_decimals_with_space_separator":
-          value = formatWithDelimiters(cents, 0, " ");
-          break;
-        case "amount_with_apostrophe_separator":
-          value = formatWithDelimiters(cents, 2, "'");
-          break;
-      }
-
-      return formatString.replace(placeholderRegex, value);
-    }
-
-    return {
-      formatMoney: formatMoney,
-    };
-  })(),
   cart: {},
   debounce: (func, wait) => {
     let timeout;
@@ -141,25 +84,6 @@ let AT = {
       }
     });
   },
-  initBackToTop: function () {
-    let btnToTop = document.getElementById("back-to-top");
-
-    !!btnToTop &&
-      btnToTop.addEventListener("click", function (e) {
-        window.scroll({
-          top: 0,
-          left: 0,
-          behavior: "smooth",
-        });
-      });
-    window.addEventListener("scroll", function () {
-      if (window.pageYOffset > window.innerHeight) {
-        btnToTop.classList.add("show");
-      } else {
-        btnToTop.classList.remove("show");
-      }
-    });
-  },
   initAddToCart: function (form) {
     // let formAddToCart = !!form ? [form] : [...document.getElementsByClassName("js-form-add-to-cart")];
 
@@ -208,84 +132,6 @@ let AT = {
     fetch("/cart/change.js", { method: "post", body: new URLSearchParams({ id: key, quantity: 0 }) })
       .then((res) => res.json())
       .then((cart) => (AT.dispatchEvent("cartChange", cart), callback()));
-  },
-  registerEvents: function (eventName, container) {
-    if (typeof container !== "undefined") {
-      this.eventContainers[eventName] = this.eventContainers[eventName] || [];
-      this.eventContainers[eventName] = [...this.eventContainers[eventName], container];
-    } else {
-      console.error("Event container is not defined");
-    }
-  },
-  dispatchEvent: function (eventName, data) {
-    let containers = AT.eventContainers[eventName] || [];
-    containers.forEach((container) => {
-      !!container && container.dispatchEvent(new CustomEvent(eventName, { detail: data }));
-    });
-  },
-  serialize: function (form) {
-    // Setup our serialized data
-    var serialized = [];
-
-    // Loop through each field in the form
-    for (var i = 0; i < form.elements.length; i++) {
-      var field = form.elements[i];
-
-      // Don't serialize fields without a name, submits, buttons, file and reset inputs, and disabled fields
-      if (
-        !field.name ||
-        field.disabled ||
-        field.type === "file" ||
-        field.type === "reset" ||
-        field.type === "submit" ||
-        field.type === "button"
-      )
-        continue;
-
-      // If a multi-select, get all selections
-      if (field.type === "select-multiple") {
-        for (var n = 0; n < field.options.length; n++) {
-          if (!field.options[n].selected) continue;
-          serialized.push(encodeURIComponent(field.name) + "=" + encodeURIComponent(field.options[n].value));
-        }
-      }
-
-      // Convert field data to a query string
-      else if ((field.type !== "checkbox" && field.type !== "radio") || field.checked) {
-        serialized.push(encodeURIComponent(field.name) + "=" + encodeURIComponent(field.value));
-      }
-    }
-
-    return serialized.join("&");
-  },
-  initCountdown: function () {
-    let countdownContainers = document.getElementsByClassName("js-countdown");
-    setInterval(function () {
-      for (const countdown of countdownContainers) {
-        let daysElm = countdown.getElementsByClassName("js-countdown-days")[0];
-        let hoursElm = countdown.getElementsByClassName("js-countdown-hours")[0];
-        let minutesElm = countdown.getElementsByClassName("js-countdown-minutes")[0];
-        let secondsElm = countdown.getElementsByClassName("js-countdown-seconds")[0];
-        let date = new Date(countdown.getAttribute("data-date")).getTime() - new Date().getTime();
-        let timer = new easytimer.Timer();
-
-        timer.start({ countdown: true, startValues: { seconds: date / 1000 } });
-
-        timer.addEventListener("secondsUpdated", function (e) {
-          let days = timer.getTimeValues().days;
-          let hours = timer.getTimeValues().hours;
-          let minutes = timer.getTimeValues().minutes;
-          let seconds = timer.getTimeValues().seconds;
-
-          daysElm.innerHTML = days > 9 ? days : `0${days}`;
-          hoursElm.innerHTML = hours > 9 ? hours : `0${hours}`;
-          minutesElm.innerHTML = minutes > 9 ? minutes : `0${minutes}`;
-          secondsElm.innerHTML = seconds > 9 ? seconds : `0${seconds}`;
-        });
-        countdown.classList.remove("js-countdown");
-        countdown.classList.add("js-countdown-loaded");
-      }
-    }, 500);
   },
   initTabs: function () {
     let tabControls = document.getElementsByClassName("js-tab-control");
