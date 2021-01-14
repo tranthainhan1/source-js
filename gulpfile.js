@@ -36,6 +36,7 @@ async function buildScripts(filePath) {
     console.log(`${path.basename(filePath)} does not exist.`);
     return;
   }
+  console.log(path.resolve(__dirname, filePath));
 
   webpack(
     {
