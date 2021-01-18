@@ -1,4 +1,3 @@
-// generated on 2020-05-29 using generator-webapp 4.0.0-5
 const { src, dest, watch, series, parallel, lastRun, task } = require("gulp");
 const browserSync = require("browser-sync").create();
 const fs = require("fs");
@@ -58,7 +57,7 @@ async function buildScripts(filePath) {
       resolve: {
         extensions: ["*", ".js"],
       },
-      devtool: "source-map",
+      // devtool: "source-map",
       optimization: {
         minimize: true,
         minimizer: [
@@ -90,7 +89,7 @@ async function buildScripts(filePath) {
 
 function scriptTask(filePath) {
   let fileName = path.basename(filePath, ".js");
-  let sourceTree = require("./app.config");
+  let sourceTree = JSON.parse(fs.readFileSync("./app.config"));
   Object.keys(sourceTree)
     .filter((item) => sourceTree[item].indexOf(fileName) != -1)
     .map((item) => {
@@ -157,7 +156,7 @@ async function build() {
           resolve: {
             extensions: ["*", ".js"],
           },
-          devtool: "source-map",
+          // devtool: "source-map",
           optimization: {
             minimize: true,
             minimizer: [
