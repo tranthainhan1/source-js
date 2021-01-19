@@ -90,13 +90,16 @@ async function buildScripts(filePath) {
 
 function scriptTask(filePath) {
   let fileName = path.basename(filePath, ".js");
-  let sourceTree = require("./app.config");
-  Object.keys(sourceTree)
-    .filter((item) => sourceTree[item].indexOf(fileName) != -1)
-    .map((item) => {
-      let filePath = "app/scripts/" + item + ".js";
-      buildScripts(filePath);
-    });
+  let sourceTree = JSON.parse(fs.readFileSync("./app.config.json"));
+  if (sourceTree.only.length > 0) {
+  } else {
+    Object.keys(sourceTree)
+      .filter((item) => sourceTree[item].indexOf(fileName) != -1)
+      .map((item) => {
+        let filePath = "app/scripts/" + item + ".js";
+        buildScripts(filePath);
+      });
+  }
 }
 
 async function removeScript(filePath) {
