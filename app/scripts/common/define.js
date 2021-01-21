@@ -67,6 +67,15 @@ Object.assign(HTMLElement.prototype, {
   },
 });
 
+//String
+Object.assign(String.prototype, {
+  toHTML: function () {
+    let div = document.createElement("div");
+    div.innerHTML = this;
+    return div.children;
+  },
+});
+
 (function () {
   let nativeFetch = window.fetch;
   window.fetch = function (...args) {
